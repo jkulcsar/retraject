@@ -182,8 +182,8 @@ suite deliberately includes targets whose wrist center passes millimeters
 from the base axis. λ = 0.01 was tuned on exactly those: generic poses
 converge in ~10 iterations, the near-singular ones in under 50.
 
-## 7. Next
+## 7. Where it leads
 
-Phase-4 integration: Cartesian waypoints through the IK, per-segment law
-selection, and synchronized playback of the resulting joint trajectories
-with the profile charts alongside the 3D scene.
+The integration layer that consumes this module — Cartesian waypoints
+taught through the IK, planned per segment, played back with synchronized
+profile charts — lives in [`../planner/README.md`](../planner/README.md).

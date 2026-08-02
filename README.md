@@ -31,12 +31,13 @@ document; this list is the map:
 | [`legacy/README.md`](legacy/README.md) | Provenance of the 1997 snapshot |
 | [`src/trajectory/README.md`](src/trajectory/README.md) | The trajectory mathematics: the normalized-shape abstraction, all five interpolation laws with their minimum-time derivations (verified against today's literature in §3.1), multi-joint synchronization, every deliberate departure from the 1997 code, and the testing strategy |
 | [`src/kinematics/README.md`](src/kinematics/README.md) | The layer 1997 never had: Denavit–Hartenberg parameters, the R6 arm and its spherical wrist, the scene-graph-equals-math design of the 3D robot, the analytic inverse kinematics with its eight branches and singularities, and the damped-least-squares solver that cross-checks it |
+| [`src/planner/README.md`](src/planner/README.md) | The integration layer closing the 1997 loop: multi-segment path planning over the trajectory primitives (the modern `Robot::SetUpTime`), teach-pendant Cartesian programming through the IK, rest-to-rest fidelity, and the end-to-end pipeline test |
 
-So far: the trajectory core, forward kinematics, and inverse kinematics
-(analytic + numerical) are built and tested (88 tests), each with an
-interactive explorer. Next is the full integration — Cartesian waypoints
-played back as synchronized trajectories — per the roadmap in
-[`REVIVAL.md`](REVIVAL.md) §4.
+The core arc of the revival is **complete**: trajectory laws, forward and
+inverse kinematics, and multi-segment path playback are built and tested
+(97 tests), all live in the explorers. What remains on the roadmap in
+[`REVIVAL.md`](REVIVAL.md) §4 are the flourishes — via-point blending,
+Cartesian-line moves, the virtual-stepper homage.
 
 ## The profile explorer
 
@@ -58,9 +59,15 @@ drivable both ways — joint sliders (forward kinematics) or a draggable
 target gizmo (inverse kinematics, solved analytically on every frame of
 the drag). Pin one of the eight IK branches to see shoulder/elbow/wrist
 alternatives; a red target means unreachable and the robot holds. Toggle
-**show frames** for the Denavit–Hartenberg triads; **demo move** plays a
-synchronized quintic trajectory from the trajectory module through all
-six joints — the two halves of the project shaking hands.
+**show frames** for the Denavit–Hartenberg triads.
+
+Then program it like a teach pendant: pose, **add waypoint**, pick a law
+per segment, **play path** — the robot replays the synchronized motion
+while a time cursor sweeps the six-joint profile charts below the scene
+(**sample path** or `/robot.html?demo=path` loads a canned three-segment
+tour whose middle segment is trapezoidal — you can see its velocity
+plateau between the quintic bells). This screen is the 1997 thesis,
+complete: pose → plan → profiles → motion.
 
 ## Development
 
