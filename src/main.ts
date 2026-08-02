@@ -3,17 +3,14 @@
  * in legacy/TRAJECT.CPP Trajectory::Show(), which drew position, speed and
  * acceleration once, in white, on a 640×480 EGA screen, and waited for a
  * keypress. Here the same three profiles are live: every control change
- * replans the segments and redraws.
- *
- * Chart design follows the project's dataviz rules: three separate charts
- * instead of one dual-axis chart (one measure per axis), series colors from
- * the validated 3-slot categorical palette, all text in ink tokens, and
- * direct labels on the curves so identity never rides on color alone.
+ * replans the segments and redraws. Chart construction and the palette
+ * rules live in charts.ts, shared with the kinematics explorer.
  */
 import "./style.css";
 import "uplot/dist/uPlot.min.css";
-import uPlot from "uplot";
+import type uPlot from "uplot";
 import { Pane } from "tweakpane";
+import { makeProfileChart } from "./charts";
 import type { LawId } from "./trajectory";
 import {
   ALL_LAWS,
@@ -43,19 +40,6 @@ const settings = { synchronize: true };
 
 const SAMPLES = 400;
 const JOINT_LABELS = ["J1", "J2", "J3"];
-
-function themeColors() {
-  const style = getComputedStyle(document.documentElement);
-  const v = (name: string) => style.getPropertyValue(name).trim();
-  return {
-    surface: v("--surface"),
-    ink: v("--ink"),
-    muted: v("--ink-muted"),
-    grid: v("--grid"),
-    axis: v("--axis"),
-    series: [v("--series-1"), v("--series-2"), v("--series-3")],
-  };
-}
 
 function planAll(): Segment[] {
   const moves = joints.map((j) => ({
@@ -98,62 +82,6 @@ function sampleAll(segments: Segment[]): ProfileData {
   return { time, position, velocity, acceleration };
 }
 
-/** Direct labels: series name in ink with a surface-colored halo, placed on
- * the curve at staggered fractions so the three labels never stack. This is
- * the "relief" the palette validation demands for the light-mode aqua. */
-function drawDirectLabels(u: uPlot): void {
-  const theme = themeColors();
-  const ctx = u.ctx;
-  const dpr = window.devicePixelRatio || 1;
-  const fractions = [0.22, 0.5, 0.78];
-  ctx.save();
-  ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
-  for (let si = 1; si < u.series.length; si++) {
-    const xs = u.data[0];
-    const ys = u.data[si] as ArrayLike<number>;
-    const idx = Math.round((xs.length - 1) * fractions[(si - 1) % fractions.length]);
-    const x = u.valToPos(xs[idx], "x", true) + 5 * dpr;
-    const y = u.valToPos(ys[idx], "y", true) - 5 * dpr;
-    const label = u.series[si].label as string;
-    ctx.lineWidth = 3 * dpr;
-    ctx.strokeStyle = theme.surface;
-    ctx.strokeText(label, x, y);
-    ctx.fillStyle = theme.ink;
-    ctx.fillText(label, x, y);
-  }
-  ctx.restore();
-}
-
-function makeChart(container: HTMLElement, height: number, data: uPlot.AlignedData): uPlot {
-  const theme = themeColors();
-  const axisStyle: uPlot.Axis = {
-    stroke: theme.muted,
-    grid: { stroke: theme.grid, width: 1 },
-    ticks: { stroke: theme.axis, width: 1 },
-  };
-  return new uPlot(
-    {
-      width: container.clientWidth,
-      height,
-      padding: [12, 28, 0, 0],
-      cursor: { sync: { key: "retraject" } },
-      scales: { x: { time: false } },
-      series: [
-        { label: "t" },
-        ...JOINT_LABELS.map((label, i) => ({
-          label,
-          stroke: theme.series[i],
-          width: 2,
-        })),
-      ],
-      axes: [axisStyle, axisStyle],
-      hooks: { draw: [drawDirectLabels] },
-    },
-    data,
-    container,
-  );
-}
-
 const chartContainers = {
   position: document.querySelector<HTMLElement>("#chart-position")!,
   velocity: document.querySelector<HTMLElement>("#chart-velocity")!,
@@ -164,10 +92,18 @@ let charts: uPlot[] = [];
 function render(): void {
   const data = sampleAll(planAll());
   charts.forEach((c) => c.destroy());
+  const make = (container: HTMLElement, height: number, series: Float64Array[]) =>
+    makeProfileChart({
+      container,
+      height,
+      data: [data.time, ...series],
+      seriesLabels: JOINT_LABELS,
+      syncKey: "retraject-profiles",
+    });
   charts = [
-    makeChart(chartContainers.position, 220, [data.time, ...data.position]),
-    makeChart(chartContainers.velocity, 170, [data.time, ...data.velocity]),
-    makeChart(chartContainers.acceleration, 170, [data.time, ...data.acceleration]),
+    make(chartContainers.position, 220, data.position),
+    make(chartContainers.velocity, 170, data.velocity),
+    make(chartContainers.acceleration, 170, data.acceleration),
   ];
 }
 
