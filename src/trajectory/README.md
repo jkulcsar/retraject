@@ -163,7 +163,31 @@ Five test families, each proving a different kind of correctness:
    a; synchronized joints share one duration, the slowest runs at its own
    minimum, and every stretched joint still respects its own limits.
 
-## 7. Units
+## 7. Via-point blending — `blend.ts`
+
+Every law above is rest-to-rest, so a multi-waypoint path stops dead at
+every waypoint — a fidelity to 1997 the planner documents. `blend.ts`
+lifts that limit with the classic linear-segments-with-parabolic-blends
+scheme (LSPB): interior waypoints become *via* points, passed at speed,
+each corner rounded by a constant-acceleration parabola centered on the
+via time and shared across all joints.
+
+Two exact closed-form properties anchor the tests: the blend misses the
+via corner by exactly Δv·tb/8 (the price of not stopping, in one
+formula), and outside the blend windows the motion lies *exactly* on the
+ideal straight line — the parabola re-enters with matched position and
+velocity. Synchronization follows the project's one rule (slowest joint
+dictates), and when blends would overlap on short segments, a single
+time-stretch factor s = √(worst blend-to-segment ratio) fixes every
+violation at once — velocities fall as 1/s, blend needs as 1/s².
+
+The payoff is visible in the explorer: toggle **blend vias** on a taught
+path and the velocity chart's zero-crossing pinches at every waypoint
+disappear — and the blended motion is typically *faster* than the
+rest-to-rest version even after stretching, because not stopping pays
+better than any interpolation law.
+
+## 8. Units
 
 The module is unit-agnostic by design: positions, velocities and
 accelerations just have to be *consistent* (degrees, deg/s, deg/s² — or

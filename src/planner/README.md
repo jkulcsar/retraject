@@ -64,10 +64,33 @@ planner — the honest place for it is a future extension of
   evaluated joint states lands back on the taught Cartesian position, and
   the sampled motion respects every joint's velocity limit throughout.
 
-## 5. Possible next steps
+## 5. Cartesian line moves — `cartesian.ts`
 
-Via-point blending (above); Cartesian-line segments (IK per sample rather
-than per waypoint — straight tool paths instead of joint-space arcs); and
-the virtual-stepper homage from REVIVAL.md §4 — quantizing a planned path
-into TCA pulse tables to visualize what the LPT1 port would have carried
-in 1997.
+The joint-space planner above makes straight lines in *joint* space,
+which are arcs in the workspace. `planLineMove` is the industrial "MoveL":
+the TOOL POSE is interpolated — position on the straight segment,
+orientation by quaternion slerp, one trajectory law's shape easing both —
+and the analytic IK runs at every sample with branch continuity (the
+previous sample seeds `closestSolution`). The joint motion is whatever
+the line demands; it has no closed form, which is why the result is a
+dense sample table and derivatives come from finite differences.
+
+The educational sting is that a straight line is not free, and the module
+reports the three ways it fails, each with the fraction of the line where
+it happened: the line exits the workspace (`out-of-reach`), demands
+configurations beyond the joints (`joint-limits`), or grazes a
+singularity where adjacent IK solutions jump (`configuration-jump`).
+That is exactly what a real controller's "cannot execute linear motion"
+message means. Tests assert the whole contract in task space, through
+forward kinematics of the produced samples: TCP colinear to 1e-9,
+shape-faithful slerp, Cartesian speed limit held, no branch teleports.
+
+## 6. The flourishes, delivered
+
+The three extensions once listed here as future work now exist: via-point
+blending in [`../trajectory/README.md`](../trajectory/README.md) §7
+(LSPB — the robot no longer stops at vias), Cartesian line moves above,
+and the virtual-stepper homage in
+[`../stepper/README.md`](../stepper/README.md) — the 1997 TCA pulse
+quantization, graphically rendered for the first time, DOS console
+included.

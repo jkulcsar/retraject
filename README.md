@@ -31,13 +31,14 @@ document; this list is the map:
 | [`legacy/README.md`](legacy/README.md) | Provenance of the 1997 snapshot |
 | [`src/trajectory/README.md`](src/trajectory/README.md) | The trajectory mathematics: the normalized-shape abstraction, all five interpolation laws with their minimum-time derivations (verified against today's literature in §3.1), multi-joint synchronization, every deliberate departure from the 1997 code, and the testing strategy |
 | [`src/kinematics/README.md`](src/kinematics/README.md) | The layer 1997 never had: Denavit–Hartenberg parameters, the R6 arm and its spherical wrist, the scene-graph-equals-math design of the 3D robot, the analytic inverse kinematics with its eight branches and singularities, and the damped-least-squares solver that cross-checks it |
-| [`src/planner/README.md`](src/planner/README.md) | The integration layer closing the 1997 loop: multi-segment path planning over the trajectory primitives (the modern `Robot::SetUpTime`), teach-pendant Cartesian programming through the IK, rest-to-rest fidelity, and the end-to-end pipeline test |
+| [`src/planner/README.md`](src/planner/README.md) | The integration layer closing the 1997 loop: multi-segment path planning over the trajectory primitives (the modern `Robot::SetUpTime`), teach-pendant Cartesian programming through the IK, Cartesian line moves ("MoveL") with honest failure reporting, and the end-to-end pipeline test |
+| [`src/stepper/README.md`](src/stepper/README.md) | The homage: the 1997 execution layer (TCA pulse quantization, the INT 08h countdown, the LPT1 pulses) modeled faithfully — including the real mid-division ripple of the original scheme — and given its first graphical representation, DOS console reproduction included |
 
-The core arc of the revival is **complete**: trajectory laws, forward and
-inverse kinematics, and multi-segment path playback are built and tested
-(97 tests), all live in the explorers. What remains on the roadmap in
-[`REVIVAL.md`](REVIVAL.md) §4 are the flourishes — via-point blending,
-Cartesian-line moves, the virtual-stepper homage.
+The revival is **complete** — core arc and flourishes: trajectory laws,
+via-point blending, forward and inverse kinematics, multi-segment and
+Cartesian-line playback, and the virtual stepper are built and tested
+(121 tests), all live in the three explorers. The roadmap in
+[`REVIVAL.md`](REVIVAL.md) §4 has been walked to its end.
 
 ## The profile explorer
 
@@ -68,6 +69,26 @@ while a time cursor sweeps the six-joint profile charts below the scene
 tour whose middle segment is trapezoidal — you can see its velocity
 plateau between the quintic bells). This screen is the 1997 thesis,
 complete: pose → plan → profiles → motion.
+
+Two extensions go beyond 1997: **blend vias** re-plans the taught path
+with parabolic blends (`?demo=blend`) — watch the velocity chart stop
+pinching to zero at waypoints, and note the blended motion is faster even
+when the timeline had to stretch to fit the blends — and **line to gizmo
+target** executes a straight Cartesian tool path via per-sample IK, with
+honest controller-style errors when the line leaves the workspace.
+
+## The virtual stepper
+
+`/stepper.html` resurrects the layer that ran closest to the metal — and
+the only one that never had a picture: in 1997 the Time Constant Array
+lived as console columns and as debug characters the interrupt handler
+wrote into video memory. The page shows the ideal law against the actual
+motor staircase and its quantization error, next to a white-on-blue
+reproduction of the original DOS console (TCA columns, the
+steps-to-execute audit, the `*`/`|` pulse stripes). Toggle
+**1997 countdown** to see the real mid-division ripple of the original
+one-constant-per-division scheme against the per-step timing the TIME00
+prototype pointed toward.
 
 ## Development
 
