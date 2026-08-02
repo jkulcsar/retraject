@@ -13,7 +13,10 @@ act of re-tracing its trajectories.
 [robot & path programming](https://jkulcsar.github.io/retraject/robot.html)
 (one-click demos: [rest-to-rest path](https://jkulcsar.github.io/retraject/robot.html?demo=path)
 · [blended vias](https://jkulcsar.github.io/retraject/robot.html?demo=blend)),
-and the [virtual stepper](https://jkulcsar.github.io/retraject/stepper.html).
+the [virtual stepper](https://jkulcsar.github.io/retraject/stepper.html),
+and [the story](https://jkulcsar.github.io/retraject/story.html) — an
+interactive article telling the whole 1997→2026 arc, with figures computed
+live by the same modules.
 Everything runs in your browser; the site is rebuilt and redeployed from
 `master` on every push, with the test suite as a gate.
 

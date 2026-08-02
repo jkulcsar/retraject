@@ -192,6 +192,46 @@ main {
   white-space: pre-line;
 }
 
+/* The story page: a readable single-column article with live figures. */
+.prose {
+  display: block;
+  max-width: 76ch;
+}
+.prose h2 {
+  font-size: 1.1rem;
+  margin: 2rem 0 0.5rem;
+}
+.prose p {
+  color: var(--ink-secondary);
+  margin: 0 0 1rem;
+}
+.prose .lede {
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.prose a {
+  color: inherit;
+}
+.prose figure {
+  margin: 1.25rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+.prose figcaption {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.25rem 0.5rem;
+}
+.prose .byline {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 2rem;
+}
+
 footer {
   margin-top: 1rem;
   color: var(--ink-muted);
