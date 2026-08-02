@@ -36,3 +36,16 @@ npm run dev     # Vite dev server
 npm test        # Vitest
 npm run build   # production build
 ```
+
+## AI assistance
+
+This project has been possible thanks to AI collaboration. The analysis of the
+1997 legacy sources, the feasibility study ([`REVIVAL.md`](REVIVAL.md)), the
+repository setup, and parts of the implementation and documentation are
+produced with [Claude Code](https://claude.com/claude-code) running Anthropic's
+**Claude Fable 5** model (`claude-fable-5`), beginning August 2026. Later
+phases may use newer Claude models; this section will be kept up to date.
+Direction, review, and final decisions are human.
+
+This note is the project-wide attribution — individual commits are not
+separately signed.
