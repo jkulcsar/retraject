@@ -53,7 +53,7 @@ import {
 } from "./trajectory";
 import { evaluatePath, planPath, samplePath } from "./planner/path";
 import { evaluateLineMove, planLineMove, sampleLineMove } from "./planner/cartesian";
-import { addTimeCursor, makeProfileChart } from "./charts";
+import { addTimeCursor, makeProfileChart, setChartPlayback } from "./charts";
 
 const RAD = Math.PI / 180;
 const DEG = 180 / Math.PI;
@@ -316,7 +316,15 @@ function buildPathCharts(): void {
     make(pathChartContainers.velocity, toDeg(samples.velocity)),
     make(pathChartContainers.acceleration, toDeg(samples.acceleration)),
   ];
-  timeCursors = pathCharts.map(addTimeCursor);
+  timeCursors = pathCharts.map((u) => {
+    const line = addTimeCursor(u);
+    // The thin line marks the instant; the comet head + trail on every
+    // series make the playback readable at a glance.
+    return (t: number | null) => {
+      line(t);
+      setChartPlayback(u, t);
+    };
+  });
 }
 
 function replanPath(): void {
