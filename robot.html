@@ -17,13 +17,17 @@
         <p class="intro">
           The R6 arm: six revolute joints described by Denavit–Hartenberg
           parameters, with a spherical wrist (joints 4–6 intersect in one
-          point — the property the upcoming inverse kinematics will exploit).
-          The 3D scene graph mirrors the DH chain exactly, and the test suite
-          proves it equals the forward kinematics to machine precision. Drag
-          to orbit, scroll to zoom; <strong>demo move</strong> runs a
-          synchronized quintic trajectory from the trajectory module across
-          all six joints — the first handshake between the two halves of this
-          project.
+          point), which is what makes closed-form inverse kinematics possible.
+          Drive it both ways: move the <strong>sliders</strong> (forward
+          kinematics) or <strong>drag the gizmo</strong> (inverse kinematics —
+          the analytic solver runs on every frame of the drag, picking the
+          solution closest to the current pose, or pin one of the eight
+          branches: shoulder front/back × elbow down/up × wrist flip). A red
+          target means out of reach or outside joint limits — the robot holds,
+          as a real controller would. Switch the gizmo to <em>rotate</em> to
+          command orientation; <strong>demo move</strong> plays a synchronized
+          quintic trajectory from the trajectory module through all six
+          joints.
         </p>
       </header>
       <main>

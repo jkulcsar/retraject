@@ -22,8 +22,13 @@ import {
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export interface RobotView {
-  /** Parent for z-up content (the robot chain). */
+  /** Parent for z-up content (the robot chain, IK gizmo target). */
   zUp: Group;
+  /** Exposed for tools that need them (e.g. TransformControls). */
+  scene: Scene;
+  camera: PerspectiveCamera;
+  domElement: HTMLCanvasElement;
+  orbit: OrbitControls;
   setBackground(color: string): void;
   /** Register a per-render-frame callback (used by motion playback). */
   onFrame(cb: (nowMs: number) => void): void;
@@ -74,6 +79,10 @@ export function createRobotView(container: HTMLElement): RobotView {
 
   return {
     zUp,
+    scene,
+    camera,
+    domElement: renderer.domElement,
+    orbit: controls,
     setBackground(color: string): void {
       scene.background = new Color(color);
     },
