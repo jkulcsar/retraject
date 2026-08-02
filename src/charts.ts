@@ -64,6 +64,10 @@ export interface ProfileChartOptions {
   seriesLabels: string[];
   /** Charts sharing a sync key share one crosshair. */
   syncKey: string;
+  /** A single-series chart needs no legend box — the title names it. */
+  showLegend?: boolean;
+  /** Optional per-series uPlot path builders (e.g. stepped staircases). */
+  seriesPaths?: (uPlot.Series.PathBuilder | undefined)[];
 }
 
 export function makeProfileChart(opts: ProfileChartOptions): uPlot {
@@ -79,6 +83,7 @@ export function makeProfileChart(opts: ProfileChartOptions): uPlot {
       height: opts.height,
       padding: [12, 28, 0, 0],
       cursor: { sync: { key: opts.syncKey } },
+      legend: { show: opts.showLegend ?? opts.seriesLabels.length > 1 },
       scales: { x: { time: false } },
       series: [
         { label: "t" },
@@ -86,6 +91,7 @@ export function makeProfileChart(opts: ProfileChartOptions): uPlot {
           label,
           stroke: theme.series[i],
           width: 2,
+          paths: opts.seriesPaths?.[i],
         })),
       ],
       axes: [axisStyle, axisStyle],
