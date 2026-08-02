@@ -7,6 +7,13 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦾</text></svg>"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* Anti-flash: paint the page plane before any stylesheet arrives.
+         The dev server injects CSS via JS, which lands after first paint
+         and shows a white frame in dark mode during navigation. */
+      html { background: #f9f9f7; color-scheme: light dark; }
+      @media (prefers-color-scheme: dark) { html { background: #0d0d0d; } }
+    </style>
     <meta
       name="description"
       content="A 1997 robotics bachelor thesis — trajectory planning for a stepper-driven robot on MS-DOS — resurrected as a TypeScript + three.js web app, with the original algorithms verified and running live."
