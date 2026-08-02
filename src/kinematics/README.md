@@ -104,10 +104,86 @@ robot that looks almost right. The defense is layered:
    sum of link translations.
 3. **Scene-graph equivalence** (§3) — the rendered robot equals the math.
 
-## 5. Next
+## 5. Inverse kinematics — `ik.ts`
 
-Inverse kinematics: the analytic spherical-wrist solution (decompose at
-the wrist center, solve θ₁–θ₃ from position geometry, extract θ₄–θ₆ from
-the residual orientation, enumerate the elbow-up/down and wrist-flip
-branches), plus a damped-least-squares numerical solver as the
-general-purpose fallback and cross-check.
+Forward kinematics is a function; inverse kinematics is an *equation*:
+given a desired tool pose T = [R | p], find every θ with FK(θ) = T. For a
+general 6R chain no closed form exists — but the spherical wrist (§2) was
+chosen precisely so one does. The solution decouples into two halves:
+
+**Position half (θ₁, θ₂, θ₃).** The wrist center is found by walking back
+from the TCP along the approach axis: p_w = p − d₆·(R·ẑ). Its position
+depends only on the first three joints:
+
+- **θ₁ = atan2(p_wy, p_wx)** — the R6 has no shoulder offset, so the arm
+  plane always contains the base axis. The *shoulder-back* branch reaches
+  the same point over the other shoulder: θ₁+π with the planar reach r
+  negated.
+- **θ₂, θ₃** solve a planar two-link problem — with a twist worth
+  noticing: the elbow-to-wrist segment is not a simple link but a rigid
+  L-piece (a₃ out, then d₄ across). Treating it as one link of length
+  L₃ = √(a₃²+d₄²) with a built-in bend ψ = atan2(d₄, a₃) reduces the
+  geometry to the textbook 2R arm: the law of cosines gives the elbow
+  angle, ± its arccos giving the *elbow-down/up* branches, and
+  θ₃ = (bend) − ψ undoes the substitution.
+
+**Orientation half (θ₄, θ₅, θ₆).** With θ₁–θ₃ fixed, R₀₃ is known, and
+the wrist must supply R₃₆ = R₀₃ᵀ·R. Multiplying out the wrist's DH
+rotations gives RotZ(θ₄)·RotX(90°)·RotZ(θ₅)·RotX(−90°)·RotZ(θ₆), and the
+inner conjugation collapses beautifully:
+
+```
+RotX(90°)·RotZ(θ₅)·RotX(−90°) = RotY(−θ₅)
+```
+
+(rotating the frame, rotating about z, rotating back = rotating about the
+image of z, which is −y). So R₃₆ = RotZ(θ₄)·RotY(−θ₅)·RotZ(θ₆) — a ZYZ
+Euler decomposition, read off with three atan2 calls, with the ±β pair
+giving the *wrist-flip* branches.
+
+2 shoulder × 2 elbow × 2 wrist = **up to eight solutions**, all returned;
+`closestSolution` picks per policy (nearest in joint space, joint limits
+respected), which is what keeps interactive dragging continuous — the arm
+never teleports between branches.
+
+**Singularities** — where solutions stop being isolated:
+- *Shoulder*: wrist center on the base axis → θ₁ arbitrary (solver picks
+  0 and drops the shoulder pair).
+- *Wrist*: θ₅ = 0 aligns axes 4 and 6 → only θ₄+θ₆ is determined (solver
+  parks θ₄ = 0 and flags the solution `wristSingular`).
+- *Elbow*: the workspace boundary, where down and up coincide.
+
+The decisive test is the **FK∘IK round trip**: every returned solution,
+fed back through `forwardKinematics`, must reproduce the target to 1e-9.
+One wrong sign anywhere in the derivation breaks it for some branch;
+thirty random targets × eight branches leave nowhere to hide.
+
+## 6. Damped least squares — `dls.ts`
+
+The numerical counterpart: knows nothing of the R6's structure, only FK
+and its derivatives, which makes it (a) an *independent* check on the
+analytic algebra (the tests require both to land on the same branches)
+and (b) the general method that survives when closed form does not — DLS
+is the workhorse of modern robotics and character animation.
+
+Linearize FK with the geometric Jacobian (column i is the TCP twist per
+unit velocity of joint i: [zᵢ₋₁ × (p − pᵢ₋₁); zᵢ₋₁]), then iterate
+
+```
+Δθ = Jᵀ (J Jᵀ + λ²I)⁻¹ e
+```
+
+with e the 6D pose error. The damping λ² is the interesting part: λ = 0
+is the pseudoinverse — fastest, but it explodes where J loses rank. Near
+a singularity the damped step stays bounded and simply *slows down* along
+the lost direction (error there shrinks by λ²/(σ²+λ²) per iteration).
+That graceful degradation is why real controllers damp — and why the test
+suite deliberately includes targets whose wrist center passes millimeters
+from the base axis. λ = 0.01 was tuned on exactly those: generic poses
+converge in ~10 iterations, the near-singular ones in under 50.
+
+## 7. Next
+
+Phase-4 integration: Cartesian waypoints through the IK, per-segment law
+selection, and synchronized playback of the resulting joint trajectories
+with the profile charts alongside the 3D scene.

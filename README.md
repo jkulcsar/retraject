@@ -30,11 +30,13 @@ document; this list is the map:
 | [`REVIVAL.md`](REVIVAL.md) | The founding study: what the 1997 code contains, what ports and what must be written fresh, the technology choices, and the overall roadmap (§4) |
 | [`legacy/README.md`](legacy/README.md) | Provenance of the 1997 snapshot |
 | [`src/trajectory/README.md`](src/trajectory/README.md) | The trajectory mathematics: the normalized-shape abstraction, all five interpolation laws with their minimum-time derivations (verified against today's literature in §3.1), multi-joint synchronization, every deliberate departure from the 1997 code, and the testing strategy |
-| [`src/kinematics/README.md`](src/kinematics/README.md) | The layer 1997 never had: Denavit–Hartenberg parameters, the R6 arm and why its spherical wrist matters for the coming inverse kinematics, the scene-graph-equals-math design of the 3D robot, and the layered FK validation |
+| [`src/kinematics/README.md`](src/kinematics/README.md) | The layer 1997 never had: Denavit–Hartenberg parameters, the R6 arm and its spherical wrist, the scene-graph-equals-math design of the 3D robot, the analytic inverse kinematics with its eight branches and singularities, and the damped-least-squares solver that cross-checks it |
 
-So far the trajectory core and forward kinematics are ported/built and
-tested (77 tests), each with an interactive explorer; inverse kinematics
-is next — see the roadmap in [`REVIVAL.md`](REVIVAL.md) §4.
+So far: the trajectory core, forward kinematics, and inverse kinematics
+(analytic + numerical) are built and tested (88 tests), each with an
+interactive explorer. Next is the full integration — Cartesian waypoints
+played back as synchronized trajectories — per the roadmap in
+[`REVIVAL.md`](REVIVAL.md) §4.
 
 ## The profile explorer
 
@@ -52,11 +54,13 @@ worth trying:
 ## The kinematics explorer
 
 `npm run dev` then open `/robot.html`: the R6 six-axis arm in three.js,
-driven by joint sliders, with a live TCP readout computed by the forward
-kinematics. Toggle **show frames** to see every Denavit–Hartenberg frame;
-**demo move** plays a synchronized quintic trajectory from the trajectory
-module through all six joints — the two halves of the project shaking
-hands for the first time.
+drivable both ways — joint sliders (forward kinematics) or a draggable
+target gizmo (inverse kinematics, solved analytically on every frame of
+the drag). Pin one of the eight IK branches to see shoulder/elbow/wrist
+alternatives; a red target means unreachable and the robot holds. Toggle
+**show frames** for the Denavit–Hartenberg triads; **demo move** plays a
+synchronized quintic trajectory from the trajectory module through all
+six joints — the two halves of the project shaking hands.
 
 ## Development
 
