@@ -27,7 +27,32 @@
  */
 import { Matrix4, Quaternion, Vector3 } from "three";
 import { forwardKinematics } from "./dh";
+import { geometricJacobian, type JointAxisFrame } from "./jacobian";
 import type { RobotModel } from "./robot";
+
+/** What one FK evaluation must provide for a DLS iteration: the tool pose
+ * plus each joint's world axis and origin (for the Jacobian). Keeping
+ * this a callback makes the solver work for ANY articulated chain — the
+ * DH-based R6 here, a URDF-loaded robot elsewhere. */
+export interface PoseEval {
+  tcp: Matrix4;
+  joints: JointAxisFrame[];
+}
+export type FKEvaluator = (angles: readonly number[]) => PoseEval;
+
+/** FKEvaluator for a DH-parameterized robot model. */
+export function dhEvaluator(robot: RobotModel): FKEvaluator {
+  return (angles) => {
+    const frames = forwardKinematics(robot.joints, angles);
+    return {
+      tcp: frames[frames.length - 1],
+      joints: frames.slice(0, -1).map((f) => {
+        const e = f.elements;
+        return { axis: [e[8], e[9], e[10]], origin: [e[12], e[13], e[14]] };
+      }),
+    };
+  };
+}
 
 export interface DLSOptions {
   /** Damping factor λ (rad-ish). Larger = more stable, slower. */
@@ -96,7 +121,20 @@ export function solveDLS(
   seed: readonly number[],
   options: DLSOptions = {},
 ): DLSResult {
-  // Defaults tuned empirically on this arm: λ = 0.01 converges in ~10
+  return solveDLSWith(dhEvaluator(robot), target, seed, options);
+}
+
+/** The generic DLS core: works for any chain an FKEvaluator can describe
+ * (the URDF explorer uses this directly — real industrial arms like the
+ * UR series have offset wrists with no closed-form solution, which is
+ * exactly the case numerical IK exists for). */
+export function solveDLSWith(
+  evalFK: FKEvaluator,
+  target: Matrix4,
+  seed: readonly number[],
+  options: DLSOptions = {},
+): DLSResult {
+  // Defaults tuned empirically on the R6: λ = 0.01 converges in ~10
   // iterations on generic poses and in <50 even when the wrist center
   // passes millimeters from the base axis (the shoulder singularity,
   // where the damped step along the lost direction shrinks by only
@@ -109,7 +147,7 @@ export function solveDLS(
     orientationTolerance = 1e-8,
     maxStep = 0.3,
   } = options;
-  const n = robot.joints.length;
+  const n = seed.length;
   const angles = [...seed];
 
   const targetPos = new Vector3().setFromMatrixPosition(target);
@@ -117,12 +155,11 @@ export function solveDLS(
 
   let iterations = 0;
   for (; iterations < maxIterations; iterations++) {
-    const frames = forwardKinematics(robot.joints, angles);
-    const tcp = frames[n];
-    const tcpPos = new Vector3().setFromMatrixPosition(tcp);
+    const pose = evalFK(angles);
+    const tcpPos = new Vector3().setFromMatrixPosition(pose.tcp);
 
     const ep = new Vector3().subVectors(targetPos, tcpPos);
-    orientationError(target, tcp, eo);
+    orientationError(target, pose.tcp, eo);
     if (ep.length() < positionTolerance && eo.length() < orientationTolerance) {
       return {
         angles,
@@ -133,21 +170,7 @@ export function solveDLS(
       };
     }
 
-    // Geometric Jacobian: joint i rotates about z of frame i−1 through its
-    // origin, so its TCP twist column is [ zᵢ₋₁ × (p − pᵢ₋₁) ; zᵢ₋₁ ].
-    const J: number[][] = Array.from({ length: 6 }, () => new Array<number>(n).fill(0));
-    for (let i = 0; i < n; i++) {
-      const e = frames[i].elements;
-      const z = new Vector3(e[8], e[9], e[10]); // z column
-      const p = new Vector3(e[12], e[13], e[14]); // origin
-      const jv = new Vector3().subVectors(tcpPos, p).cross(z).negate(); // z × (tcp − p)
-      J[0][i] = jv.x;
-      J[1][i] = jv.y;
-      J[2][i] = jv.z;
-      J[3][i] = z.x;
-      J[4][i] = z.y;
-      J[5][i] = z.z;
-    }
+    const J = geometricJacobian(pose.joints, [tcpPos.x, tcpPos.y, tcpPos.z]);
 
     // (J Jᵀ + λ² I) y = e, then Δθ = Jᵀ y.
     const err = [ep.x, ep.y, ep.z, eo.x, eo.y, eo.z];
@@ -166,12 +189,9 @@ export function solveDLS(
     }
   }
 
-  const frames = forwardKinematics(robot.joints, angles);
-  const ep = new Vector3()
-    .setFromMatrixPosition(frames[n])
-    .sub(targetPos)
-    .length();
-  orientationError(target, frames[n], eo);
+  const pose = evalFK(angles);
+  const ep = new Vector3().setFromMatrixPosition(pose.tcp).sub(targetPos).length();
+  orientationError(target, pose.tcp, eo);
   return {
     angles,
     converged: false,

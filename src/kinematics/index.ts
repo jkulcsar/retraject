@@ -9,5 +9,12 @@ export type { JointSpec, RobotModel } from "./robot";
 export { R6, WRIST_FRAME, homePose } from "./robot";
 export type { IKBranch, IKSolution } from "./ik";
 export { closestSolution, solveSphericalWrist, wrapAngle } from "./ik";
-export type { DLSOptions, DLSResult } from "./dls";
-export { solveDLS } from "./dls";
+export type { DLSOptions, DLSResult, FKEvaluator, PoseEval } from "./dls";
+export { dhEvaluator, solveDLS, solveDLSWith } from "./dls";
+export type { EigenSymmetric3, JointAxisFrame, Manipulability } from "./jacobian";
+export {
+  eigenSymmetric3,
+  geometricJacobian,
+  manipulability6,
+  translationalManipulability,
+} from "./jacobian";
