@@ -51,6 +51,15 @@ body {
   padding: 1.5rem 1rem 2rem;
 }
 
+header nav {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.5rem;
+}
+header nav a {
+  color: var(--ink-secondary);
+}
+
 header h1 {
   font-size: 1.4rem;
   margin: 0 0 0.25rem;
@@ -100,6 +109,25 @@ main {
 .u-legend .u-value {
   font-variant-numeric: tabular-nums;
   color: var(--ink);
+}
+
+/* Kinematics explorer */
+#viewport {
+  height: 560px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+#viewport canvas {
+  display: block;
+}
+#tcp-readout {
+  margin-top: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  white-space: pre;
 }
 
 footer {

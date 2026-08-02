@@ -82,6 +82,32 @@ f = v_max²/(v_max² + a_max·|D|); as |D| grows, f → 0 (all cruise), and at
 the boundary |D| = v_max²/a_max, f = ½ — the cruise vanishes and the
 trapezoid *is* the bang-bang triangle. A test asserts that identity.
 
+### 3.1 Verification of the 1997 formulas (August 2026)
+
+The golden tests prove the port matches 1997; two further checks prove 1997
+itself was right:
+
+**Independent numeric re-derivation.** Taking only the shape definitions
+and extracting peak |r′| and |r″| by dense numerical differentiation
+reproduces every constant the legacy closed forms imply: 1 (linear),
+3/2 and 6 (cubic), 15/8 and 10/√3 ≈ 5.7735027 (quintic, peak at
+τ = (3±√3)/6), 2 and 4 (bang-bang); the trapezoid's T = KV/KA + |D|/KV
+re-derives exactly from ramp-distance kinematics.
+
+**Today's literature.** The cubic peak matches the worked example in
+Clemson's open robotics textbook (v_peak = 3D/2T). The quintic is the
+classic **"3-4-5 polynomial"** of cam and servo-drive design — the
+standard derivation f(z) = 6z⁵ − 15z⁴ + 10z³ is this law verbatim — and is
+also the minimum-jerk trajectory (every minimum-jerk point-to-point motion
+is a 5th-order polynomial). The trapezoidal three-phase timing with
+triangular fallback is the industry-standard point-to-point profile
+(e.g. MATLAB's `trapveltraj`, PMD's motion-profile mathematics). Sources:
+[Clemson open textbook — Trajectory Generation](https://opentextbooks.clemson.edu/wangrobotics/chapter/trajectory-generation/),
+[Nolte — Motion Laws for Cam Gears and Servo Drives](https://nolte-nc-kurventechnik.hier-im-netz.de/en/motion-laws.html),
+[MechDesigner — Polynomial 3-4-5 Motion-Law](http://mechdesigner.support/mt-motion-law-polynomial345.htm),
+[PMD — Mathematics of Motion Control Profiles](https://www.pmdcorp.com/resources/type/articles/get/mathematics-of-motion-control-profiles-article),
+[MathWorks — Trapezoidal Velocity Profile Trajectory](https://www.mathworks.com/help/robotics/ug/design-a-trajectory-with-velocity-limits-using-a-trapezoidal-velocity-profile.html).
+
 ## 4. Synchronization — `synchronize.ts`
 
 A coordinated robot motion needs every joint to start and finish together.

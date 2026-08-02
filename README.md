@@ -29,12 +29,12 @@ document; this list is the map:
 |---|---|
 | [`REVIVAL.md`](REVIVAL.md) | The founding study: what the 1997 code contains, what ports and what must be written fresh, the technology choices, and the overall roadmap (§4) |
 | [`legacy/README.md`](legacy/README.md) | Provenance of the 1997 snapshot |
-| [`src/trajectory/README.md`](src/trajectory/README.md) | The trajectory mathematics: the normalized-shape abstraction, all five interpolation laws with their minimum-time derivations, multi-joint synchronization, every deliberate departure from the 1997 code, and the testing strategy |
+| [`src/trajectory/README.md`](src/trajectory/README.md) | The trajectory mathematics: the normalized-shape abstraction, all five interpolation laws with their minimum-time derivations (verified against today's literature in §3.1), multi-joint synchronization, every deliberate departure from the 1997 code, and the testing strategy |
+| [`src/kinematics/README.md`](src/kinematics/README.md) | The layer 1997 never had: Denavit–Hartenberg parameters, the R6 arm and why its spherical wrist matters for the coming inverse kinematics, the scene-graph-equals-math design of the 3D robot, and the layered FK validation |
 
-So far the trajectory core is ported and tested (68 tests), with an
-interactive profile explorer to play with it; forward/inverse kinematics
-and the three.js robot are next — see the roadmap in
-[`REVIVAL.md`](REVIVAL.md) §4.
+So far the trajectory core and forward kinematics are ported/built and
+tested (77 tests), each with an interactive explorer; inverse kinematics
+is next — see the roadmap in [`REVIVAL.md`](REVIVAL.md) §4.
 
 ## The profile explorer
 
@@ -48,6 +48,15 @@ worth trying:
   vanishes and the profile degrades into the bang-bang triangle.
 - Compare **Quintic** against **Bang-bang** at equal limits — smoothness
   is bought with time.
+
+## The kinematics explorer
+
+`npm run dev` then open `/robot.html`: the R6 six-axis arm in three.js,
+driven by joint sliders, with a live TCP readout computed by the forward
+kinematics. Toggle **show frames** to see every Denavit–Hartenberg frame;
+**demo move** plays a synchronized quintic trajectory from the trajectory
+module through all six joints — the two halves of the project shaking
+hands for the first time.
 
 ## Development
 

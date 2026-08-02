@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦾</text></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>retraject · kinematics explorer</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <nav><a href="/index.html">profiles</a> · <strong>robot</strong></nav>
+        <h1>retraject <span class="subtitle">kinematics explorer</span></h1>
+        <p class="intro">
+          The R6 arm: six revolute joints described by Denavit–Hartenberg
+          parameters, with a spherical wrist (joints 4–6 intersect in one
+          point — the property the upcoming inverse kinematics will exploit).
+          The 3D scene graph mirrors the DH chain exactly, and the test suite
+          proves it equals the forward kinematics to machine precision. Drag
+          to orbit, scroll to zoom; <strong>demo move</strong> runs a
+          synchronized quintic trajectory from the trajectory module across
+          all six joints — the first handshake between the two halves of this
+          project.
+        </p>
+      </header>
+      <main>
+        <div id="controls">
+          <div id="tcp-readout" aria-live="polite"></div>
+        </div>
+        <div id="viewport"></div>
+      </main>
+      <footer>
+        <p>
+          Part of <a href="https://github.com/jkulcsar/retraject">retraject</a> —
+          the DH convention, the arm's geometry, and the validation strategy
+          live in <code>src/kinematics/README.md</code>.
+        </p>
+      </footer>
+    </div>
+    <script type="module" src="/src/robot-main.ts"></script>
+  </body>
+</html>
