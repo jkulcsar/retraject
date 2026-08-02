@@ -1,7 +1,7 @@
 # Legacy sources (1997)
 
 This folder is a byte-identical, unmodified copy of the `TRAJECT` folder from the
-[UPT coursework archive](https://github.com/jkulcsar/UPT) at commit `62f54f7` —
+[UPT coursework archive](https://github.com/jkulcsar/UPT) at commit `f505a41` —
 the original bachelor-thesis project: robot trajectory planning and real-time
 stepper control, written in Borland C++ for MS-DOS (1997).
 
