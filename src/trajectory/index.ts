@@ -9,3 +9,5 @@ export type { MotionState, SampledSegment, Segment, SegmentSpec } from "./segmen
 export { evaluateSegment, planSegment, sampleSegment } from "./segment";
 export type { JointMove } from "./synchronize";
 export { synchronizeMoves } from "./synchronize";
+export type { BlendedPath } from "./blend";
+export { evaluateBlendedPath, planBlendedPath, sampleBlendedPath } from "./blend";
