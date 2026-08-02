@@ -8,6 +8,15 @@ robot in sync with the computed axis motions.
 The name is *re-* + *traject(ory)*: a revival of the DOS-era project, and the
 act of re-tracing its trajectories.
 
+**Try it live: <https://jkulcsar.github.io/retraject/>** — the
+[profile explorer](https://jkulcsar.github.io/retraject/index.html), the
+[robot & path programming](https://jkulcsar.github.io/retraject/robot.html)
+(one-click demos: [rest-to-rest path](https://jkulcsar.github.io/retraject/robot.html?demo=path)
+· [blended vias](https://jkulcsar.github.io/retraject/robot.html?demo=blend)),
+and the [virtual stepper](https://jkulcsar.github.io/retraject/stepper.html).
+Everything runs in your browser; the site is rebuilt and redeployed from
+`master` on every push, with the test suite as a gate.
+
 ## The two halves
 
 | | |

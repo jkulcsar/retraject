@@ -1,8 +1,12 @@
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 
-// Two independent pages, one per explorer; Vite builds each html entry.
+// Three independent pages, one per explorer; Vite builds each html entry.
+// base "./" makes all emitted asset references relative, so the same build
+// works at the domain root (local preview) and under a subpath
+// (GitHub Pages serves this repo at /retraject/).
 export default defineConfig({
+  base: "./",
   build: {
     rollupOptions: {
       input: {
