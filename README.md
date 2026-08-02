@@ -14,7 +14,9 @@ act of re-tracing its trajectories.
 (one-click demos: [rest-to-rest path](https://jkulcsar.github.io/retraject/robot.html?demo=path)
 · [blended vias](https://jkulcsar.github.io/retraject/robot.html?demo=blend)),
 the [virtual stepper](https://jkulcsar.github.io/retraject/stepper.html),
-and [the story](https://jkulcsar.github.io/retraject/story.html) — an
+the [URDF import](https://jkulcsar.github.io/retraject/urdf.html) (a real
+UR5e driven by the numeric IK), and
+[the story](https://jkulcsar.github.io/retraject/story.html) — an
 interactive article telling the whole 1997→2026 arc, with figures computed
 live by the same modules.
 Everything runs in your browser; the site is rebuilt and redeployed from
@@ -45,12 +47,18 @@ document; this list is the map:
 | [`src/kinematics/README.md`](src/kinematics/README.md) | The layer 1997 never had: Denavit–Hartenberg parameters, the R6 arm and its spherical wrist, the scene-graph-equals-math design of the 3D robot, the analytic inverse kinematics with its eight branches and singularities, and the damped-least-squares solver that cross-checks it |
 | [`src/planner/README.md`](src/planner/README.md) | The integration layer closing the 1997 loop: multi-segment path planning over the trajectory primitives (the modern `Robot::SetUpTime`), teach-pendant Cartesian programming through the IK, Cartesian line moves ("MoveL") with honest failure reporting, and the end-to-end pipeline test |
 | [`src/stepper/README.md`](src/stepper/README.md) | The homage: the 1997 execution layer (TCA pulse quantization, the INT 08h countdown, the LPT1 pulses) modeled faithfully — including the real mid-division ripple of the original scheme — and given its first graphical representation, DOS console reproduction included |
+| [`HARDWARE.md`](HARDWARE.md) | The plan for the final loop-closing: driving real stepper motors from the browser (Web Serial + RP2040 executing host-computed pulse schedules — the 1997 architecture with the ISR moved into a $5 chip), protocol, firmware sketch, constraints, phases, and an $71 bill of materials |
 
-The revival is **complete** — core arc and flourishes: trajectory laws,
-via-point blending, forward and inverse kinematics, multi-segment and
-Cartesian-line playback, and the virtual stepper are built and tested
-(121 tests), all live in the three explorers. The roadmap in
-[`REVIVAL.md`](REVIVAL.md) §4 has been walked to its end.
+The revival is **complete and then some** — core arc, flourishes, and the
+extensions beyond the original roadmap: trajectory laws, via-point
+blending, forward and inverse kinematics (analytic + numeric over a
+generic FKEvaluator), multi-segment / Cartesian-line playback, the
+virtual stepper, manipulability analysis, shareable path links, and URDF
+import (132 tests), all live across five explorer pages. The math modules
+(`src/trajectory`, `src/kinematics/jacobian.ts`, `src/planner/share.ts`)
+are deliberately dependency-light plain-array code, designed for
+lift-and-port to other languages. What remains is hardware:
+[`HARDWARE.md`](HARDWARE.md).
 
 ## The profile explorer
 
