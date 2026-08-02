@@ -8,17 +8,22 @@ robot in sync with the computed axis motions.
 The name is *re-* + *traject(ory)*: a revival of the DOS-era project, and the
 act of re-tracing its trajectories.
 
-**Try it live: <https://jkulcsar.github.io/retraject/>** — start with
-[the story](https://jkulcsar.github.io/retraject/story.html), an
-interactive article telling the whole 1997→2026 arc with figures computed
-live by the same modules; then the
-[profile explorer](https://jkulcsar.github.io/retraject/index.html), the
+**Try it live: <https://jkulcsar.github.io/retraject/>** — the root is
+[the story](https://jkulcsar.github.io/retraject/), an interactive
+article telling the whole 1997→2026 arc with figures computed live by
+the same modules; from there, the
+[profile explorer](https://jkulcsar.github.io/retraject/profiles.html), the
 [robot & path programming](https://jkulcsar.github.io/retraject/robot.html)
 (one-click demos: [rest-to-rest path](https://jkulcsar.github.io/retraject/robot.html?demo=path)
 · [blended vias](https://jkulcsar.github.io/retraject/robot.html?demo=blend)),
 the [virtual stepper](https://jkulcsar.github.io/retraject/stepper.html),
 and the [URDF import](https://jkulcsar.github.io/retraject/urdf.html) (a
 real UR5e driven by the numeric IK).
+
+Feedback and questions are welcome in
+[GitHub Discussions](https://github.com/jkulcsar/retraject/discussions);
+bug reports in [Issues](https://github.com/jkulcsar/retraject/issues).
+Every page footer links there too.
 Everything runs in your browser; the site is rebuilt and redeployed from
 `master` on every push, with the test suite as a gate.
 
@@ -62,7 +67,7 @@ lift-and-port to other languages. What remains is hardware:
 
 ## The profile explorer
 
-`npm run dev` opens an interactive playground: three joints, five
+`npm run dev` then open `/profiles.html`: an interactive playground: three joints, five
 interpolation laws, live position/velocity/acceleration charts. Things
 worth trying:
 
@@ -125,7 +130,7 @@ This project has been possible thanks to AI collaboration. The analysis of the
 1997 legacy sources, the feasibility study ([`REVIVAL.md`](REVIVAL.md)), the
 repository setup, and parts of the implementation and documentation are
 produced with [Claude Code](https://claude.com/claude-code) running Anthropic's
-**Claude Fable 5** model (`claude-fable-5`), beginning August 2026. Later
+**Claude Fable 5** model (`claude-fable-5`), beginning in 2026. Later
 phases may use newer Claude models; this section will be kept up to date.
 Direction, review, and final decisions are human.
 

@@ -10,10 +10,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        profiles: fileURLToPath(new URL("index.html", import.meta.url)),
+        story: fileURLToPath(new URL("index.html", import.meta.url)),
+        profiles: fileURLToPath(new URL("profiles.html", import.meta.url)),
         robot: fileURLToPath(new URL("robot.html", import.meta.url)),
         stepper: fileURLToPath(new URL("stepper.html", import.meta.url)),
-        story: fileURLToPath(new URL("story.html", import.meta.url)),
         urdf: fileURLToPath(new URL("urdf.html", import.meta.url)),
       },
     },
