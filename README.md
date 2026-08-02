@@ -19,14 +19,35 @@ act of re-tracing its trajectories.
 archived code, what ports and what must be written fresh, and the phased plan
 this repository follows.
 
-## Status
+## Documentation trail
 
-- [x] Phase 0 — repository setup: legacy snapshot, feasibility study, TypeScript/Vite scaffold
-- [ ] Phase 1 — port the five trajectory laws + λ-synchronization, with tests and profile charts
-- [ ] Phase 2 — robot model (URDF), forward kinematics, three.js scene
-- [ ] Phase 3 — inverse kinematics: analytic spherical-wrist solver + damped-least-squares
-- [ ] Phase 4 — integration: waypoints, per-segment law selection, synchronized 3D + chart playback
-- [ ] Phase 5 — flourishes: virtual-stepper emulation, Cartesian line moves, angle-stream export
+This project is educational on purpose, and the documentation is written to
+be read *next to the code it explains* — every module carries its own
+document; this list is the map:
+
+| Document | What it teaches |
+|---|---|
+| [`REVIVAL.md`](REVIVAL.md) | The founding study: what the 1997 code contains, what ports and what must be written fresh, the technology choices, and the overall roadmap (§4) |
+| [`legacy/README.md`](legacy/README.md) | Provenance of the 1997 snapshot |
+| [`src/trajectory/README.md`](src/trajectory/README.md) | The trajectory mathematics: the normalized-shape abstraction, all five interpolation laws with their minimum-time derivations, multi-joint synchronization, every deliberate departure from the 1997 code, and the testing strategy |
+
+So far the trajectory core is ported and tested (68 tests), with an
+interactive profile explorer to play with it; forward/inverse kinematics
+and the three.js robot are next — see the roadmap in
+[`REVIVAL.md`](REVIVAL.md) §4.
+
+## The profile explorer
+
+`npm run dev` opens an interactive playground: three joints, five
+interpolation laws, live position/velocity/acceleration charts. Things
+worth trying:
+
+- Toggle **synchronize** — the fast joints' velocity curves flatten (the
+  λ time-scaling at work) while their position curves keep their shape.
+- Give a joint a short move on the **Trapezoidal** law — the cruise phase
+  vanishes and the profile degrades into the bang-bang triangle.
+- Compare **Quintic** against **Bang-bang** at equal limits — smoothness
+  is bought with time.
 
 ## Development
 
