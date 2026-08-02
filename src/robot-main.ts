@@ -33,10 +33,13 @@ import { buildRobotChain } from "./scene/robotChain";
 import {
   R6,
   closestSolution,
-  forwardKinematics,
+  dhEvaluator,
+  geometricJacobian,
   homePose,
+  manipulability6,
   positionOf,
   solveSphericalWrist,
+  translationalManipulability,
   type IKSolution,
 } from "./kinematics";
 import {
@@ -86,6 +89,20 @@ ikTarget.add(targetBall);
 ikTarget.add(new AxesHelper(0.09));
 view.zUp.add(ikTarget);
 
+// The velocity ellipsoid: unit joint speed ‖q̇‖=1 in every direction maps
+// through the Jacobian to this ellipsoid of achievable TCP velocities.
+// Near a singularity, watch it flatten — the pancake's missing direction
+// is what the robot is losing. (Display-scaled; shape is what matters.)
+const ELLIPSOID_SCALE = 0.35;
+const manipEllipsoid = new Mesh(
+  new SphereGeometry(1, 32, 16),
+  new MeshBasicMaterial({ color: REACHABLE_COLOR, transparent: true, opacity: 0.2, depthWrite: false }),
+);
+manipEllipsoid.matrixAutoUpdate = false;
+manipEllipsoid.visible = false;
+view.zUp.add(manipEllipsoid);
+const evalR6 = dhEvaluator(R6);
+
 const gizmo = new TransformControls(view.camera, view.domElement);
 gizmo.attach(ikTarget);
 gizmo.setSize(0.75);
@@ -99,7 +116,13 @@ gizmo.addEventListener("objectChange", () => solveToTarget());
 
 const anglesDeg: Record<string, number> = {};
 R6.joints.forEach((j, i) => (anglesDeg[`j${i + 1}`] = j.home * DEG));
-const options = { showFrames: false, branch: "closest", mode: "translate" as "translate" | "rotate" };
+const options = {
+  showFrames: false,
+  showManipulability: new URLSearchParams(location.search).get("manip") === "1",
+  branch: "closest",
+  mode: "translate" as "translate" | "rotate",
+};
+
 
 const readout = document.querySelector<HTMLElement>("#tcp-readout")!;
 let ikStatus = "";
@@ -109,16 +132,34 @@ const currentPose = (): number[] => R6.joints.map((_, i) => anglesDeg[`j${i + 1}
 const branchLabel = (s: IKSolution): string =>
   `${s.branch.shoulder}·${s.branch.elbow}·${s.branch.wrist}`;
 
-/** Push the model state everywhere: robot pose, TCP readout, and (unless
- * the change came FROM the gizmo) the gizmo itself, which follows the TCP. */
+/** Push the model state everywhere: robot pose, TCP readout with the 6D
+ * manipulability, the velocity ellipsoid, and (unless the change came
+ * FROM the gizmo) the gizmo itself, which follows the TCP. */
 function apply(syncGizmo = true): void {
   const pose = currentPose();
   chain.setPose(pose);
-  const tcpFrame = forwardKinematics(R6.joints, pose)[6];
+  const pe = evalR6(pose);
+  const tcpFrame = pe.tcp;
   const tcp = positionOf(tcpFrame);
+  const J = geometricJacobian(pe.joints, [tcp.x, tcp.y, tcp.z]);
+  const w6 = manipulability6(J);
   readout.textContent =
     `TCP  x ${tcp.x.toFixed(3)}  y ${tcp.y.toFixed(3)}  z ${tcp.z.toFixed(3)} m` +
+    `   ·   manip ${w6.toExponential(1)}${w6 < 1e-4 ? "  ⚠ near singular" : ""}` +
     (ikStatus ? `\n${ikStatus}` : "");
+
+  if (manipEllipsoid.visible) {
+    const m = translationalManipulability(J);
+    const [a1, a2, a3] = m.axes;
+    const [r1, r2, r3] = m.radii.map((r) => Math.max(1e-4, r * ELLIPSOID_SCALE));
+    manipEllipsoid.matrix.makeBasis(
+      new Vector3(...a1).multiplyScalar(r1),
+      new Vector3(...a2).multiplyScalar(r2),
+      new Vector3(...a3).multiplyScalar(r3),
+    );
+    manipEllipsoid.matrix.setPosition(tcp.x, tcp.y, tcp.z);
+  }
+
   if (syncGizmo) {
     ikTarget.position.setFromMatrixPosition(tcpFrame);
     ikTarget.quaternion.setFromRotationMatrix(tcpFrame);
@@ -212,6 +253,10 @@ targetFolder.addBinding(options, "branch", {
     ),
   ]),
 }).on("change", () => solveToTarget());
+targetFolder.addBinding(options, "showManipulability", { label: "manipulability" }).on("change", () => {
+  manipEllipsoid.visible = options.showManipulability;
+  apply(false);
+});
 targetFolder.addButton({ title: "move straight to target" }).on("click", () => {
   // MoveL: a straight Cartesian tool path from the current pose to the
   // gizmo, IK-solved per sample, eased with the quintic law.
@@ -441,5 +486,6 @@ if (demo === "path" || demo === "blend") {
   loadSamplePath();
 }
 
+manipEllipsoid.visible = options.showManipulability;
 apply();
 updatePathStatus();
