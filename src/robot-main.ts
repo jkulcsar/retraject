@@ -43,13 +43,10 @@ import {
   ALL_LAWS,
   LAWS,
   evaluateBlendedPath,
-  evaluateSegment,
   planBlendedPath,
   sampleBlendedPath,
-  synchronizeMoves,
   type LawId,
   type MotionState,
-  type Segment,
 } from "./trajectory";
 import { evaluatePath, planPath, samplePath } from "./planner/path";
 import { evaluateLineMove, planLineMove, sampleLineMove } from "./planner/cartesian";
@@ -165,13 +162,21 @@ function solveToTarget(): void {
 }
 
 // ---- controls -------------------------------------------------------------
+// The panel mirrors the page's mental model, numbered: 1·Pose sets where
+// the joints ARE (forward kinematics), 2·Target commands where the tool
+// SHOULD GO (inverse kinematics), 3·Program records poses into a playable
+// path. Every control lives with the question it answers.
+
+const JOINT_LIMITS = { maxVelocity: 90 * RAD, maxAcceleration: 180 * RAD };
 
 const pane = new Pane({
   container: document.querySelector<HTMLElement>("#controls")!,
   title: "R6 arm",
 });
+
+const poseFolder = pane.addFolder({ title: "1 · Pose — joints (FK)" });
 R6.joints.forEach((j, i) => {
-  pane.addBinding(anglesDeg, `j${i + 1}`, {
+  poseFolder.addBinding(anglesDeg, `j${i + 1}`, {
     label: j.name,
     min: Math.round(j.min * DEG),
     max: Math.round(j.max * DEG),
@@ -181,14 +186,23 @@ R6.joints.forEach((j, i) => {
     apply();
   });
 });
+poseFolder.addBinding(options, "showFrames", { label: "show DH frames" }).on("change", () => {
+  chain.frameHelpers.forEach((h) => (h.visible = options.showFrames));
+});
+poseFolder.addButton({ title: "home pose" }).on("click", () => {
+  R6.joints.forEach((j, i) => (anglesDeg[`j${i + 1}`] = j.home * DEG));
+  ikStatus = "";
+  pane.refresh();
+  apply();
+});
 
-const ikFolder = pane.addFolder({ title: "Inverse kinematics" });
-ikFolder.addBinding(options, "mode", {
+const targetFolder = pane.addFolder({ title: "2 · Target — tool (IK)" });
+targetFolder.addBinding(options, "mode", {
   label: "gizmo",
   options: { translate: "translate", rotate: "rotate" },
 }).on("change", () => gizmo.setMode(options.mode));
-ikFolder.addBinding(options, "branch", {
-  label: "branch",
+targetFolder.addBinding(options, "branch", {
+  label: "IK branch",
   options: Object.fromEntries([
     ["closest", "closest"],
     ...(["front", "back"] as const).flatMap((s) =>
@@ -198,43 +212,32 @@ ikFolder.addBinding(options, "branch", {
     ),
   ]),
 }).on("change", () => solveToTarget());
-
-pane.addBinding(options, "showFrames", { label: "show frames" }).on("change", () => {
-  chain.frameHelpers.forEach((h) => (h.visible = options.showFrames));
-});
-
-// ---- motion playback ------------------------------------------------------
-
-const POSE_B = [70, -85, 100, 45, -60, 90].map((d) => d * RAD);
-const JOINT_LIMITS = { maxVelocity: 90 * RAD, maxAcceleration: 180 * RAD };
-
-let playback: { segments: Segment[]; startMs: number; duration: number } | null = null;
-let target: "A" | "B" = "B";
-
-pane.addButton({ title: "home" }).on("click", () => {
-  R6.joints.forEach((j, i) => (anglesDeg[`j${i + 1}`] = j.home * DEG));
-  ikStatus = "";
-  pane.refresh();
-  apply();
-  target = "B";
-});
-
-pane.addButton({ title: "demo move" }).on("click", () => {
-  const goal = target === "B" ? POSE_B : homePose(R6);
-  target = target === "B" ? "A" : "B";
-  const segments = synchronizeMoves(
-    currentPose().map((start, i) => ({
-      law: LAWS.quintic,
-      start,
-      end: goal[i],
-      limits: JOINT_LIMITS,
-    })),
-  );
-  playback = {
-    segments,
-    startMs: performance.now(),
-    duration: segments[0]?.duration ?? 0,
+targetFolder.addButton({ title: "move straight to target" }).on("click", () => {
+  // MoveL: a straight Cartesian tool path from the current pose to the
+  // gizmo, IK-solved per sample, eased with the quintic law.
+  const result = planLineMove({
+    robot: R6,
+    startAngles: currentPose(),
+    target: gizmoTargetMatrix(),
+    law: LAWS.quintic,
+    limits: CARTESIAN_LIMITS,
+  });
+  if (!result.ok) {
+    updatePathStatus(
+      `line move failed: ${result.reason} at ${(result.failedAtFraction * 100).toFixed(0)}% of the line`,
+    );
+    return;
+  }
+  const move = result.move;
+  activePlan = {
+    duration: move.duration,
+    label: "Cartesian line to target (quintic), IK per sample",
+    stateAt: (t) => evaluateLineMove(move, t),
+    sample: (n) => sampleLineMove(move, n),
   };
+  buildPathCharts();
+  updatePathStatus();
+  pathPlayback = { startMs: performance.now() };
 });
 
 // ---- path programming: the Phase-4 loop -----------------------------------
@@ -369,7 +372,7 @@ function replanPath(): void {
 }
 
 const lawOptions = Object.fromEntries(ALL_LAWS.map((l) => [l.label, l.id]));
-const pathFolder = pane.addFolder({ title: "Path programming" });
+const pathFolder = pane.addFolder({ title: "3 · Program — teach & play" });
 pathFolder.addBinding(pathState, "law", { label: "segment law", options: lawOptions });
 pathFolder.addBinding(pathState, "blend", { label: "blend vias" }).on("change", replanPath);
 pathFolder.addButton({ title: "add waypoint" }).on("click", () => {
@@ -389,34 +392,6 @@ pathFolder.addButton({ title: "clear path" }).on("click", () => {
 });
 pathFolder.addButton({ title: "play path" }).on("click", () => {
   if (activePlan) pathPlayback = { startMs: performance.now() };
-});
-pathFolder.addButton({ title: "line to gizmo target" }).on("click", () => {
-  // MoveL: a straight tool path from the current pose to wherever the
-  // gizmo is, IK-solved per sample — something the joint-space 1997
-  // system could not express.
-  const result = planLineMove({
-    robot: R6,
-    startAngles: currentPose(),
-    target: gizmoTargetMatrix(),
-    law: LAWS[pathState.law],
-    limits: CARTESIAN_LIMITS,
-  });
-  if (!result.ok) {
-    updatePathStatus(
-      `line move failed: ${result.reason} at ${(result.failedAtFraction * 100).toFixed(0)}% of the line`,
-    );
-    return;
-  }
-  const move = result.move;
-  activePlan = {
-    duration: move.duration,
-    label: `Cartesian line (${pathState.law}), IK per sample`,
-    stateAt: (t) => evaluateLineMove(move, t),
-    sample: (n) => sampleLineMove(move, n),
-  };
-  buildPathCharts();
-  updatePathStatus();
-  pathPlayback = { startMs: performance.now() };
 });
 pathFolder.addButton({ title: "sample path" }).on("click", loadSamplePath);
 
@@ -448,15 +423,6 @@ new ResizeObserver(() => {
 // ---- frame loop -----------------------------------------------------------
 
 view.onFrame((nowMs) => {
-  if (playback) {
-    const t = (nowMs - playback.startMs) / 1000;
-    playback.segments.forEach((segment, i) => {
-      anglesDeg[`j${i + 1}`] = evaluateSegment(segment, t).position * DEG;
-    });
-    pane.refresh();
-    apply();
-    if (t >= playback.duration) playback = null;
-  }
   if (pathPlayback && activePlan) {
     const t = Math.min((nowMs - pathPlayback.startMs) / 1000, activePlan.duration);
     activePlan.stateAt(t).forEach((state, i) => {

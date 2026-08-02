@@ -15,24 +15,34 @@
         <nav><a href="./index.html">profiles</a> · <strong>robot</strong> · <a href="./stepper.html">stepper</a></nav>
         <h1>retraject <span class="subtitle">kinematics explorer</span></h1>
         <p class="intro">
-          The R6 arm: six revolute joints described by Denavit–Hartenberg
-          parameters, with a spherical wrist (joints 4–6 intersect in one
-          point), which is what makes closed-form inverse kinematics possible.
-          Drive it both ways: move the <strong>sliders</strong> (forward
-          kinematics) or <strong>drag the gizmo</strong> (inverse kinematics —
-          the analytic solver runs on every frame of the drag, picking the
-          solution closest to the current pose, or pin one of the eight
-          branches: shoulder front/back × elbow down/up × wrist flip). A red
-          target means out of reach or outside joint limits — the robot holds,
-          as a real controller would. Switch the gizmo to <em>rotate</em> to
-          command orientation. Then program like a teach pendant: pose the
-          robot (sliders or gizmo), <strong>add waypoint</strong>, pick a law
-          per segment, <strong>play path</strong> — the multi-segment planner
-          synchronizes all six joints per segment, the robot replays the
-          motion, and the profile charts below scrub in time with the 3D
-          scene. That loop — pose → plan → profiles → motion — is the 1997
-          thesis, whole.
+          The R6 arm: six revolute joints from Denavit–Hartenberg parameters,
+          with a spherical wrist — the property that makes closed-form inverse
+          kinematics possible. Three ways to work with it, matching the three
+          panel sections:
         </p>
+        <ol class="steps">
+          <li>
+            <strong>Pose</strong> — the joint sliders <em>are</em> the robot
+            (forward kinematics); the TCP readout follows.
+          </li>
+          <li>
+            <strong>Target</strong> — drag the gizmo and the analytic IK
+            follows on every frame, choosing the solution closest to the
+            current pose (or pin one of the eight shoulder/elbow/wrist
+            branches). A red target = out of reach or beyond joint limits;
+            the robot holds, as a real controller would.
+            <strong>Move straight to target</strong> executes a Cartesian
+            line — with honest controller errors when the line can't be done.
+          </li>
+          <li>
+            <strong>Program</strong> — teach waypoints like a pendant, pick a
+            law per segment (or <strong>blend vias</strong> to pass through
+            them without stopping), then <strong>play</strong>: the robot
+            replays while the charts below scrub in sync. Demos:
+            <a href="./robot.html?demo=path">rest-to-rest path</a> ·
+            <a href="./robot.html?demo=blend">blended vias</a>.
+          </li>
+        </ol>
       </header>
       <main>
         <div id="controls">

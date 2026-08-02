@@ -80,6 +80,19 @@ header h1 {
   margin: 0 0 1.25rem;
 }
 
+.steps {
+  color: var(--ink-secondary);
+  max-width: 72ch;
+  margin: 0 0 1.25rem;
+  padding-left: 1.4rem;
+}
+.steps li {
+  margin-bottom: 0.4rem;
+}
+.steps a {
+  color: inherit;
+}
+
 main {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
