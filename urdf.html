@@ -8,18 +8,26 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      /* Anti-flash: paint the page plane before any stylesheet arrives.
-         The dev server injects CSS via JS, which lands after first paint
-         and shows a white frame in dark mode during navigation. */
+      /* Anti-flash: paint page plane + text basics before any stylesheet
+         arrives, and keep the content hidden until the real stylesheet
+         (which sets #app visible again) has landed. In production the CSS
+         is render-blocking so the hidden period is zero; on the dev
+         server it replaces the unstyled white blink with a calm beat. */
       html { background: #f9f9f7; color-scheme: light dark; }
-      @media (prefers-color-scheme: dark) { html { background: #0d0d0d; } }
+      body { margin: 0; background: #f9f9f7; color: #0b0b0b;
+             font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      @media (prefers-color-scheme: dark) {
+        html, body { background: #0d0d0d; }
+        body { color: #ffffff; }
+      }
+      #app { visibility: hidden; }
     </style>
     <title>retraject · URDF import</title>
   </head>
   <body>
     <div id="app">
       <header>
-        <nav><a href="./index.html">profiles</a> · <a href="./robot.html">robot</a> · <a href="./stepper.html">stepper</a> · <a href="./story.html">story</a> · <strong>urdf</strong></nav>
+        <nav><a href="./story.html">story</a> · <a href="./index.html">profiles</a> · <a href="./robot.html">robot</a> · <a href="./stepper.html">stepper</a> · <strong>urdf</strong></nav>
         <h1>retraject <span class="subtitle">URDF import — real robots, numeric IK</span></h1>
         <p class="intro">
           The industry describes robots in <strong>URDF</strong> files, and

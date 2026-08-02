@@ -52,6 +52,9 @@ body {
 }
 
 #app {
+  /* The inline head style hides #app until this stylesheet has loaded —
+   * the other half of the anti-flash handshake. */
+  visibility: visible;
   max-width: 1080px;
   margin: 0 auto;
   padding: 1.5rem 1rem 2rem;
