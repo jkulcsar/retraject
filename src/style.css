@@ -15,6 +15,9 @@
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -30,6 +33,9 @@
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
   }
 }
 
@@ -86,18 +92,38 @@ main {
   }
 }
 
-#charts section {
+#charts section,
+#path-charts section {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.5rem 0.75rem 0.25rem;
   margin-bottom: 1rem;
 }
-#charts h2 {
+#charts h2,
+#path-charts h2 {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--ink-secondary);
   margin: 0.25rem 0 0;
+}
+#path-charts {
+  margin-top: 1rem;
+}
+#path-charts[hidden] {
+  display: none;
+}
+
+/* Playback-time indicator inside a chart's plot area (charts.ts). */
+.time-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: var(--ink-muted);
+  pointer-events: none;
+  display: none;
 }
 
 /* uPlot chrome: legend text in ink tokens; the colored marker square
@@ -122,12 +148,13 @@ main {
 #viewport canvas {
   display: block;
 }
-#tcp-readout {
+#tcp-readout,
+#path-status {
   margin-top: 0.75rem;
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
   color: var(--ink-secondary);
-  white-space: pre;
+  white-space: pre-line;
 }
 
 footer {

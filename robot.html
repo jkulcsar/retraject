@@ -25,17 +25,27 @@
           branches: shoulder front/back × elbow down/up × wrist flip). A red
           target means out of reach or outside joint limits — the robot holds,
           as a real controller would. Switch the gizmo to <em>rotate</em> to
-          command orientation; <strong>demo move</strong> plays a synchronized
-          quintic trajectory from the trajectory module through all six
-          joints.
+          command orientation. Then program like a teach pendant: pose the
+          robot (sliders or gizmo), <strong>add waypoint</strong>, pick a law
+          per segment, <strong>play path</strong> — the multi-segment planner
+          synchronizes all six joints per segment, the robot replays the
+          motion, and the profile charts below scrub in time with the 3D
+          scene. That loop — pose → plan → profiles → motion — is the 1997
+          thesis, whole.
         </p>
       </header>
       <main>
         <div id="controls">
           <div id="tcp-readout" aria-live="polite"></div>
+          <div id="path-status" aria-live="polite"></div>
         </div>
         <div id="viewport"></div>
       </main>
+      <div id="path-charts" hidden>
+        <section><h2>Path · joint positions (deg)</h2><div class="chart" id="path-chart-position"></div></section>
+        <section><h2>Path · joint velocities (deg/s)</h2><div class="chart" id="path-chart-velocity"></div></section>
+        <section><h2>Path · joint accelerations (deg/s²)</h2><div class="chart" id="path-chart-acceleration"></div></section>
+      </div>
       <footer>
         <p>
           Part of <a href="https://github.com/jkulcsar/retraject">retraject</a> —

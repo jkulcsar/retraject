@@ -15,6 +15,8 @@
  * module through all six joints — the Phase-4 promise in miniature.
  */
 import "./style.css";
+import "uplot/dist/uPlot.min.css";
+import type uPlot from "uplot";
 import {
   AxesHelper,
   Group,
@@ -37,7 +39,16 @@ import {
   solveSphericalWrist,
   type IKSolution,
 } from "./kinematics";
-import { LAWS, evaluateSegment, synchronizeMoves, type Segment } from "./trajectory";
+import {
+  ALL_LAWS,
+  LAWS,
+  evaluateSegment,
+  synchronizeMoves,
+  type LawId,
+  type Segment,
+} from "./trajectory";
+import { evaluatePath, planPath, samplePath, type PlannedPath } from "./planner/path";
+import { addTimeCursor, makeProfileChart } from "./charts";
 
 const RAD = Math.PI / 180;
 const DEG = 180 / Math.PI;
@@ -221,15 +232,157 @@ pane.addButton({ title: "demo move" }).on("click", () => {
   };
 });
 
-view.onFrame((nowMs) => {
-  if (!playback) return;
-  const t = (nowMs - playback.startMs) / 1000;
-  playback.segments.forEach((segment, i) => {
-    anglesDeg[`j${i + 1}`] = evaluateSegment(segment, t).position * DEG;
+// ---- path programming: the Phase-4 loop -----------------------------------
+// Pose the robot (sliders or IK gizmo) → capture waypoints in joint space →
+// a law per segment → planPath synchronizes all six joints per segment →
+// playback drives the 3D robot while a time cursor sweeps the profile
+// charts. This is the whole 1997 pipeline in one screen — with the
+// Cartesian teaching the original never had.
+
+const pathState = { law: "quintic" as LawId, waypoints: [] as number[][], laws: [] as LawId[] };
+let plannedPath: PlannedPath | null = null;
+let pathPlayback: { startMs: number } | null = null;
+
+const pathStatus = document.querySelector<HTMLElement>("#path-status")!;
+const chartsRoot = document.querySelector<HTMLElement>("#path-charts")!;
+const pathChartContainers = {
+  position: document.querySelector<HTMLElement>("#path-chart-position")!,
+  velocity: document.querySelector<HTMLElement>("#path-chart-velocity")!,
+  acceleration: document.querySelector<HTMLElement>("#path-chart-acceleration")!,
+};
+let pathCharts: uPlot[] = [];
+let timeCursors: ((t: number | null) => void)[] = [];
+
+const PATH_LIMITS = R6.joints.map(() => JOINT_LIMITS);
+
+function updatePathStatus(): void {
+  if (pathState.waypoints.length === 0) {
+    pathStatus.textContent = "Path  no waypoints yet";
+    return;
+  }
+  const laws = pathState.laws.map((id) => id);
+  pathStatus.textContent =
+    `Path  ${pathState.waypoints.length} waypoints` +
+    (plannedPath
+      ? `, ${plannedPath.segments.length} segments, ${plannedPath.duration.toFixed(2)} s`
+      : "") +
+    (laws.length ? `\nlaws: ${laws.join(" → ")}` : "");
+}
+
+function buildPathCharts(): void {
+  if (!plannedPath) return;
+  chartsRoot.hidden = false;
+  const samples = samplePath(plannedPath, 600);
+  const toDeg = (arrays: Float64Array[]) =>
+    arrays.map((a) => Float64Array.from(a, (v) => v * DEG));
+  pathCharts.forEach((c) => c.destroy());
+  const labels = R6.joints.map((_, i) => `J${i + 1}`);
+  const make = (container: HTMLElement, series: Float64Array[]) =>
+    makeProfileChart({
+      container,
+      height: 170,
+      data: [samples.time, ...series],
+      seriesLabels: labels,
+      syncKey: "retraject-path",
+    });
+  pathCharts = [
+    make(pathChartContainers.position, toDeg(samples.position)),
+    make(pathChartContainers.velocity, toDeg(samples.velocity)),
+    make(pathChartContainers.acceleration, toDeg(samples.acceleration)),
+  ];
+  timeCursors = pathCharts.map(addTimeCursor);
+}
+
+function replanPath(): void {
+  pathPlayback = null;
+  if (pathState.waypoints.length < 2) {
+    plannedPath = null;
+    chartsRoot.hidden = true;
+    updatePathStatus();
+    return;
+  }
+  plannedPath = planPath({
+    waypoints: pathState.waypoints,
+    laws: pathState.laws.map((id) => LAWS[id]),
+    limits: PATH_LIMITS,
   });
-  pane.refresh();
-  apply();
-  if (t >= playback.duration) playback = null;
+  buildPathCharts();
+  updatePathStatus();
+}
+
+const lawOptions = Object.fromEntries(ALL_LAWS.map((l) => [l.label, l.id]));
+const pathFolder = pane.addFolder({ title: "Path programming" });
+pathFolder.addBinding(pathState, "law", { label: "segment law", options: lawOptions });
+pathFolder.addButton({ title: "add waypoint" }).on("click", () => {
+  pathState.waypoints.push(currentPose());
+  if (pathState.waypoints.length > 1) pathState.laws.push(pathState.law);
+  replanPath();
+});
+pathFolder.addButton({ title: "undo waypoint" }).on("click", () => {
+  pathState.waypoints.pop();
+  pathState.laws = pathState.laws.slice(0, Math.max(0, pathState.waypoints.length - 1));
+  replanPath();
+});
+pathFolder.addButton({ title: "clear path" }).on("click", () => {
+  pathState.waypoints = [];
+  pathState.laws = [];
+  replanPath();
+});
+pathFolder.addButton({ title: "play path" }).on("click", () => {
+  if (plannedPath) pathPlayback = { startMs: performance.now() };
+});
+pathFolder.addButton({ title: "sample path" }).on("click", loadSamplePath);
+
+/** A canned three-segment tour (also reachable via ?demo=path). */
+function loadSamplePath(): void {
+  pathState.waypoints = [
+    homePose(R6),
+    [70, -85, 100, 45, -60, 90].map((d) => d * RAD),
+    [-40, 40, -55, -30, 60, -20].map((d) => d * RAD),
+    homePose(R6),
+  ];
+  pathState.laws = ["quintic", "trapezoidal", "quintic"];
+  replanPath();
+  pathPlayback = { startMs: performance.now() };
+}
+
+// Theme flips and container resizes rebuild the canvas charts.
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => buildPathCharts());
+let chartResizeQueued = false;
+new ResizeObserver(() => {
+  if (chartResizeQueued) return;
+  chartResizeQueued = true;
+  requestAnimationFrame(() => {
+    chartResizeQueued = false;
+    if (!chartsRoot.hidden) buildPathCharts();
+  });
+}).observe(chartsRoot);
+
+// ---- frame loop -----------------------------------------------------------
+
+view.onFrame((nowMs) => {
+  if (playback) {
+    const t = (nowMs - playback.startMs) / 1000;
+    playback.segments.forEach((segment, i) => {
+      anglesDeg[`j${i + 1}`] = evaluateSegment(segment, t).position * DEG;
+    });
+    pane.refresh();
+    apply();
+    if (t >= playback.duration) playback = null;
+  }
+  if (pathPlayback && plannedPath) {
+    const t = Math.min((nowMs - pathPlayback.startMs) / 1000, plannedPath.duration);
+    evaluatePath(plannedPath, t).forEach((state, i) => {
+      anglesDeg[`j${i + 1}`] = state.position * DEG;
+    });
+    pane.refresh();
+    apply();
+    timeCursors.forEach((set) => set(t));
+    if (t >= plannedPath.duration) pathPlayback = null; // cursor stays at the end
+  }
 });
 
+if (new URLSearchParams(location.search).get("demo") === "path") loadSamplePath();
+
 apply();
+updatePathStatus();
