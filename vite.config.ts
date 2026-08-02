@@ -14,6 +14,7 @@ export default defineConfig({
         robot: fileURLToPath(new URL("robot.html", import.meta.url)),
         stepper: fileURLToPath(new URL("stepper.html", import.meta.url)),
         story: fileURLToPath(new URL("story.html", import.meta.url)),
+        urdf: fileURLToPath(new URL("urdf.html", import.meta.url)),
       },
     },
   },

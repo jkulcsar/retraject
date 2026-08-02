@@ -19,6 +19,7 @@
   "dependencies": {
     "three": "^0.185.1",
     "tweakpane": "^4.0.5",
-    "uplot": "^1.6.32"
+    "uplot": "^1.6.32",
+    "urdf-loader": "^0.13.1"
   }
 }

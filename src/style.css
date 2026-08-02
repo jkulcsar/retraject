@@ -192,6 +192,20 @@ main {
   white-space: pre-line;
 }
 
+/* URDF file import control, styled like a quiet button. */
+.file-label {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  color: var(--ink-secondary);
+  background: var(--surface);
+}
+.file-label input {
+  display: none;
+}
+
 /* The story page: a readable single-column article with live figures. */
 .prose {
   display: block;

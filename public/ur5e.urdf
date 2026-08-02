@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<!--
+  UR5e kinematics, expressed as URDF with primitive visuals.
+
+  Joint origins are derived mechanically from the published UR5e standard
+  Denavit-Hartenberg parameters (Universal Robots documentation):
+    d = [0.1625, 0, 0, 0.1333, 0.0997, 0.0996]
+    a = [0, -0.425, -0.3922, 0, 0, 0]
+    alpha = [pi/2, 0, 0, pi/2, -pi/2, 0]
+  via the identity: URDF joint i origin = TransZ(d_{i-1}) TransX(a_{i-1})
+  RotX(alpha_{i-1}) of the previous DH row, axis = z. Visuals are plain
+  cylinders along each link's d/a offsets - swap this file for the
+  official ur_description URDF + meshes to get the full visual model;
+  the explorer only assumes revolute joints and a tool link.
+
+  Note the wrist: d5 = 0.0997 offsets joint 5 from joint 4 - the three
+  wrist axes do NOT meet in a point. This robot has no spherical wrist,
+  which is exactly why the retraject analytic solver refuses it and the
+  numeric (DLS) solver takes over.
+-->
+<robot name="UR5e">
+  <material name="body"><color rgba="0.72 0.71 0.70 1.0"/></material>
+  <material name="joint"><color rgba="0.16 0.47 0.84 1.0"/></material>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.075" length="0.04"/></geometry>
+      <material name="joint"/>
+    </visual>
+  </link>
+
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/><child link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/><axis xyz="0 0 1"/>
+    <limit lower="-6.2832" upper="6.2832" effort="150" velocity="3.14"/>
+  </joint>
+  <link name="link1">
+    <visual>
+      <origin xyz="0 0 0.08125" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.055" length="0.1625"/></geometry>
+      <material name="body"/>
+    </visual>
+  </link>
+
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/><child link="link2"/>
+    <origin xyz="0 0 0.1625" rpy="1.5707963 0 0"/><axis xyz="0 0 1"/>
+    <limit lower="-6.2832" upper="6.2832" effort="150" velocity="3.14"/>
+  </joint>
+  <link name="link2">
+    <visual>
+      <origin xyz="-0.2125 0 0" rpy="0 1.5707963 0"/>
+      <geometry><cylinder radius="0.05" length="0.425"/></geometry>
+      <material name="body"/>
+    </visual>
+  </link>
+
+  <joint name="joint3" type="revolute">
+    <parent link="link2"/><child link="link3"/>
+    <origin xyz="-0.425 0 0" rpy="0 0 0"/><axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="150" velocity="3.14"/>
+  </joint>
+  <link name="link3">
+    <visual>
+      <origin xyz="-0.1961 0 0" rpy="0 1.5707963 0"/>
+      <geometry><cylinder radius="0.042" length="0.3922"/></geometry>
+      <material name="body"/>
+    </visual>
+  </link>
+
+  <joint name="joint4" type="revolute">
+    <parent link="link3"/><child link="link4"/>
+    <origin xyz="-0.3922 0 0" rpy="0 0 0"/><axis xyz="0 0 1"/>
+    <limit lower="-6.2832" upper="6.2832" effort="28" velocity="3.14"/>
+  </joint>
+  <link name="link4">
+    <visual>
+      <origin xyz="0 0 0.06665" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.038" length="0.1333"/></geometry>
+      <material name="joint"/>
+    </visual>
+  </link>
+
+  <joint name="joint5" type="revolute">
+    <parent link="link4"/><child link="link5"/>
+    <origin xyz="0 0 0.1333" rpy="1.5707963 0 0"/><axis xyz="0 0 1"/>
+    <limit lower="-6.2832" upper="6.2832" effort="28" velocity="3.14"/>
+  </joint>
+  <link name="link5">
+    <visual>
+      <origin xyz="0 0 0.04985" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.036" length="0.0997"/></geometry>
+      <material name="joint"/>
+    </visual>
+  </link>
+
+  <joint name="joint6" type="revolute">
+    <parent link="link5"/><child link="link6"/>
+    <origin xyz="0 0 0.0997" rpy="-1.5707963 0 0"/><axis xyz="0 0 1"/>
+    <limit lower="-6.2832" upper="6.2832" effort="28" velocity="3.14"/>
+  </joint>
+  <link name="link6">
+    <visual>
+      <origin xyz="0 0 0.0498" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.032" length="0.0996"/></geometry>
+      <material name="body"/>
+    </visual>
+  </link>
+
+  <joint name="tool_joint" type="fixed">
+    <parent link="link6"/><child link="tool0"/>
+    <origin xyz="0 0 0.0996" rpy="0 0 0"/>
+  </joint>
+  <link name="tool0"/>
+</robot>
