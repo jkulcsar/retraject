@@ -26,7 +26,8 @@
  * velocities scale 1/s and blend needs 1/s², so the smallest feasible
  * s = √(worst blend-to-segment ratio) fixes every violation in one pass.
  */
-import type { JointLimits, MotionState } from "./law";
+import type { JointLimits } from "./law";
+import type { MotionState } from "./segment";
 
 export interface BlendedPath {
   jointCount: number;

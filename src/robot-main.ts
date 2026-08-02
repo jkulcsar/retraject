@@ -42,12 +42,17 @@ import {
 import {
   ALL_LAWS,
   LAWS,
+  evaluateBlendedPath,
   evaluateSegment,
+  planBlendedPath,
+  sampleBlendedPath,
   synchronizeMoves,
   type LawId,
+  type MotionState,
   type Segment,
 } from "./trajectory";
-import { evaluatePath, planPath, samplePath, type PlannedPath } from "./planner/path";
+import { evaluatePath, planPath, samplePath } from "./planner/path";
+import { evaluateLineMove, planLineMove, sampleLineMove } from "./planner/cartesian";
 import { addTimeCursor, makeProfileChart } from "./charts";
 
 const RAD = Math.PI / 180;
@@ -126,13 +131,13 @@ function apply(syncGizmo = true): void {
 
 // ---- inverse kinematics ---------------------------------------------------
 
-function solveToTarget(): void {
+function gizmoTargetMatrix(): Matrix4 {
   ikTarget.updateMatrix();
-  const target = new Matrix4().compose(
-    ikTarget.position,
-    ikTarget.quaternion,
-    new Vector3(1, 1, 1),
-  );
+  return new Matrix4().compose(ikTarget.position, ikTarget.quaternion, new Vector3(1, 1, 1));
+}
+
+function solveToTarget(): void {
+  const target = gizmoTargetMatrix();
   const solutions = solveSphericalWrist(R6, target);
 
   let pick: IKSolution | null = null;
@@ -239,8 +244,28 @@ pane.addButton({ title: "demo move" }).on("click", () => {
 // charts. This is the whole 1997 pipeline in one screen — with the
 // Cartesian teaching the original never had.
 
-const pathState = { law: "quintic" as LawId, waypoints: [] as number[][], laws: [] as LawId[] };
-let plannedPath: PlannedPath | null = null;
+/** One playable plan, whatever produced it — rest-to-rest segments, a
+ * blended via path, or a Cartesian line move. Charts and playback only
+ * see this surface. */
+interface ActivePlan {
+  duration: number;
+  label: string;
+  stateAt(t: number): MotionState[];
+  sample(n: number): {
+    time: Float64Array;
+    position: Float64Array[];
+    velocity: Float64Array[];
+    acceleration: Float64Array[];
+  };
+}
+
+const pathState = {
+  law: "quintic" as LawId,
+  blend: false,
+  waypoints: [] as number[][],
+  laws: [] as LawId[],
+};
+let activePlan: ActivePlan | null = null;
 let pathPlayback: { startMs: number } | null = null;
 
 const pathStatus = document.querySelector<HTMLElement>("#path-status")!;
@@ -254,25 +279,26 @@ let pathCharts: uPlot[] = [];
 let timeCursors: ((t: number | null) => void)[] = [];
 
 const PATH_LIMITS = R6.joints.map(() => JOINT_LIMITS);
+/** Tool-point limits for Cartesian line moves: m/s, m/s². */
+const CARTESIAN_LIMITS = { maxVelocity: 0.4, maxAcceleration: 0.8 };
 
-function updatePathStatus(): void {
-  if (pathState.waypoints.length === 0) {
-    pathStatus.textContent = "Path  no waypoints yet";
-    return;
+function updatePathStatus(error?: string): void {
+  const lines: string[] = [];
+  if (pathState.waypoints.length > 0) {
+    lines.push(`Path  ${pathState.waypoints.length} waypoints`);
+    if (pathState.laws.length > 0 && !pathState.blend) {
+      lines.push(`laws: ${pathState.laws.join(" → ")}`);
+    }
   }
-  const laws = pathState.laws.map((id) => id);
-  pathStatus.textContent =
-    `Path  ${pathState.waypoints.length} waypoints` +
-    (plannedPath
-      ? `, ${plannedPath.segments.length} segments, ${plannedPath.duration.toFixed(2)} s`
-      : "") +
-    (laws.length ? `\nlaws: ${laws.join(" → ")}` : "");
+  if (activePlan) lines.push(`plan: ${activePlan.label}, ${activePlan.duration.toFixed(2)} s`);
+  if (error) lines.push(`!! ${error}`);
+  pathStatus.textContent = lines.join("\n") || "Path  no waypoints yet";
 }
 
 function buildPathCharts(): void {
-  if (!plannedPath) return;
+  if (!activePlan) return;
   chartsRoot.hidden = false;
-  const samples = samplePath(plannedPath, 600);
+  const samples = activePlan.sample(600);
   const toDeg = (arrays: Float64Array[]) =>
     arrays.map((a) => Float64Array.from(a, (v) => v * DEG));
   pathCharts.forEach((c) => c.destroy());
@@ -295,17 +321,41 @@ function buildPathCharts(): void {
 
 function replanPath(): void {
   pathPlayback = null;
+  activePlan = null;
   if (pathState.waypoints.length < 2) {
-    plannedPath = null;
     chartsRoot.hidden = true;
     updatePathStatus();
     return;
   }
-  plannedPath = planPath({
-    waypoints: pathState.waypoints,
-    laws: pathState.laws.map((id) => LAWS[id]),
-    limits: PATH_LIMITS,
-  });
+  try {
+    if (pathState.blend) {
+      const bp = planBlendedPath(pathState.waypoints, PATH_LIMITS);
+      activePlan = {
+        duration: bp.duration,
+        label:
+          "blended vias (linear + parabolic blends)" +
+          (bp.timeScale > 1 ? `, time ×${bp.timeScale.toFixed(2)} to fit blends` : ""),
+        stateAt: (t) => evaluateBlendedPath(bp, t),
+        sample: (n) => sampleBlendedPath(bp, n),
+      };
+    } else {
+      const p = planPath({
+        waypoints: pathState.waypoints,
+        laws: pathState.laws.map((id) => LAWS[id]),
+        limits: PATH_LIMITS,
+      });
+      activePlan = {
+        duration: p.duration,
+        label: `${p.segments.length} rest-to-rest segments`,
+        stateAt: (t) => evaluatePath(p, t),
+        sample: (n) => samplePath(p, n),
+      };
+    }
+  } catch (err) {
+    chartsRoot.hidden = true;
+    updatePathStatus((err as Error).message);
+    return;
+  }
   buildPathCharts();
   updatePathStatus();
 }
@@ -313,6 +363,7 @@ function replanPath(): void {
 const lawOptions = Object.fromEntries(ALL_LAWS.map((l) => [l.label, l.id]));
 const pathFolder = pane.addFolder({ title: "Path programming" });
 pathFolder.addBinding(pathState, "law", { label: "segment law", options: lawOptions });
+pathFolder.addBinding(pathState, "blend", { label: "blend vias" }).on("change", replanPath);
 pathFolder.addButton({ title: "add waypoint" }).on("click", () => {
   pathState.waypoints.push(currentPose());
   if (pathState.waypoints.length > 1) pathState.laws.push(pathState.law);
@@ -329,7 +380,35 @@ pathFolder.addButton({ title: "clear path" }).on("click", () => {
   replanPath();
 });
 pathFolder.addButton({ title: "play path" }).on("click", () => {
-  if (plannedPath) pathPlayback = { startMs: performance.now() };
+  if (activePlan) pathPlayback = { startMs: performance.now() };
+});
+pathFolder.addButton({ title: "line to gizmo target" }).on("click", () => {
+  // MoveL: a straight tool path from the current pose to wherever the
+  // gizmo is, IK-solved per sample — something the joint-space 1997
+  // system could not express.
+  const result = planLineMove({
+    robot: R6,
+    startAngles: currentPose(),
+    target: gizmoTargetMatrix(),
+    law: LAWS[pathState.law],
+    limits: CARTESIAN_LIMITS,
+  });
+  if (!result.ok) {
+    updatePathStatus(
+      `line move failed: ${result.reason} at ${(result.failedAtFraction * 100).toFixed(0)}% of the line`,
+    );
+    return;
+  }
+  const move = result.move;
+  activePlan = {
+    duration: move.duration,
+    label: `Cartesian line (${pathState.law}), IK per sample`,
+    stateAt: (t) => evaluateLineMove(move, t),
+    sample: (n) => sampleLineMove(move, n),
+  };
+  buildPathCharts();
+  updatePathStatus();
+  pathPlayback = { startMs: performance.now() };
 });
 pathFolder.addButton({ title: "sample path" }).on("click", loadSamplePath);
 
@@ -370,19 +449,23 @@ view.onFrame((nowMs) => {
     apply();
     if (t >= playback.duration) playback = null;
   }
-  if (pathPlayback && plannedPath) {
-    const t = Math.min((nowMs - pathPlayback.startMs) / 1000, plannedPath.duration);
-    evaluatePath(plannedPath, t).forEach((state, i) => {
+  if (pathPlayback && activePlan) {
+    const t = Math.min((nowMs - pathPlayback.startMs) / 1000, activePlan.duration);
+    activePlan.stateAt(t).forEach((state, i) => {
       anglesDeg[`j${i + 1}`] = state.position * DEG;
     });
     pane.refresh();
     apply();
     timeCursors.forEach((set) => set(t));
-    if (t >= plannedPath.duration) pathPlayback = null; // cursor stays at the end
+    if (t >= activePlan.duration) pathPlayback = null; // cursor stays at the end
   }
 });
 
-if (new URLSearchParams(location.search).get("demo") === "path") loadSamplePath();
+const demo = new URLSearchParams(location.search).get("demo");
+if (demo === "path" || demo === "blend") {
+  pathState.blend = demo === "blend";
+  loadSamplePath();
+}
 
 apply();
 updatePathStatus();
