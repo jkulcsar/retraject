@@ -53,6 +53,7 @@ import {
 } from "./trajectory";
 import { evaluatePath, planPath, samplePath } from "./planner/path";
 import { evaluateLineMove, planLineMove, sampleLineMove } from "./planner/cartesian";
+import { decodeSharedPath, encodeSharedPath } from "./planner/share";
 import { addTimeCursor, makeProfileChart, setChartPlayback } from "./charts";
 
 const RAD = Math.PI / 180;
@@ -439,6 +440,22 @@ pathFolder.addButton({ title: "play path" }).on("click", () => {
   if (activePlan) pathPlayback = { startMs: performance.now() };
 });
 pathFolder.addButton({ title: "sample path" }).on("click", loadSamplePath);
+pathFolder.addButton({ title: "copy share link" }).on("click", () => {
+  if (pathState.waypoints.length < 2) {
+    updatePathStatus("nothing to share yet — add at least two waypoints");
+    return;
+  }
+  const qs = encodeSharedPath({
+    waypoints: pathState.waypoints,
+    laws: pathState.laws,
+    blend: pathState.blend,
+  });
+  const url = `${location.origin}${location.pathname}?${qs}`;
+  navigator.clipboard?.writeText(url).then(
+    () => updatePathStatus("share link copied — anyone opening it sees this motion"),
+    () => updatePathStatus(url), // clipboard denied: show the link instead
+  );
+});
 
 /** A canned three-segment tour (also reachable via ?demo=path). */
 function loadSamplePath(): void {
@@ -480,8 +497,17 @@ view.onFrame((nowMs) => {
   }
 });
 
+// A shared link replays its motion on load; the demo params remain.
+const shared = decodeSharedPath(location.search, R6.joints.length);
 const demo = new URLSearchParams(location.search).get("demo");
-if (demo === "path" || demo === "blend") {
+if (shared) {
+  pathState.waypoints = shared.waypoints;
+  pathState.laws = shared.laws;
+  pathState.blend = shared.blend;
+  pane.refresh();
+  replanPath();
+  if (activePlan) pathPlayback = { startMs: performance.now() };
+} else if (demo === "path" || demo === "blend") {
   pathState.blend = demo === "blend";
   loadSamplePath();
 }
