@@ -1,24 +1,32 @@
 # Living picture — the build plan
 
 *Phase 3 of [`HARDWARE.md`](HARDWARE.md) ("the rig") made concrete. A pen
-plotter inside a deep picture frame, under glass. It hangs on a wall or
-lies on a desk, draws a new picture every few hours, keeps every drawing
-on a paper roll, and later rolls them back into view one by one. When it
-isn't drawing, all you see is the picture. The trajectory mathematics of
-1997, leaving a trace on the wall.*
+plotter in a box with a glass front. It hangs on a wall or lies on a
+desk, draws a new picture every few hours, keeps every drawing on a paper
+roll, and later rolls them back into view one by one. When it isn't
+drawing, all you see is the picture. The trajectory mathematics of 1997,
+leaving a trace on the wall.*
 
 This is a slow build: many weekends, one phase at a time. Every phase
 ends with a **gate**, a test that has to pass before the next phase
 starts, and the risky parts are tested on the bench before anything is
 built around them.
 
+**Two versions.**
+- **v1 (this plan)** lives in a bought box: an IKEA BESTÅ shelf with a
+  GLASSVIK glass door. It is the cheapest and quickest way to prove the
+  whole living cycle, with a picture of about 35 × 33 cm.
+- **v2** comes once v1 works: a frame of its own, built on the plotter's
+  aluminium frame, for a 46 × 33 cm landscape picture. Its design is
+  kept below, ready.
+
 ## 1. What we are building
 
 | | |
 |---|---|
 | Mechanism | CoreXY on V-slot extrusion, after [PlotteRXY](https://github.com/jamescarruthers/PlotteRXY) |
-| Picture | about 46 × 33 cm, landscape, drawn on a 42 cm paper roll |
-| Frame | about 76 × 57 × 11 cm, built on the plotter's aluminium frame; 8–9 kg with an acrylic front |
+| Picture | v1: about 35 × 33 cm; v2: 46 × 33 cm landscape. Both drawn on a 42 cm paper roll |
+| Box | v1: IKEA BESTÅ shelf with GLASSVIK door, 60 × 64 × 22 cm, about 16 kg with the mechanism. v2: own frame, about 76 × 57 × 11 cm, 8–9 kg |
 | Drive | the bench Pi (§2 of `HARDWARE.md`), pigpio waveforms, 3 stepper drivers |
 | Motors | M1, M2: CoreXY. M3: paper take-up. Pen lift: a servo |
 | Colours | one pen first, a capped pen rack with 4–6 colours later |
@@ -33,15 +41,17 @@ behind the mat border; the Pi and drivers sit behind the backing board.
 | Decision | Why |
 |---|---|
 | CoreXY, after PlotteRXY | Rigid, both motors fixed; the only researched design with a priced BOM, a size formula and squaring and belt-tension steps |
-| Hung landscape, gantry beam vertical | The beam's weight rests on the bottom rail's wheels; the belts only hold the light pen carriage |
+| Gantry beam vertical when hanging | The beam's weight rests on the bottom rail's wheels; the belts only hold the light pen carriage |
+| v1 box: IKEA BESTÅ shelf with GLASSVIK door | CHF 108 plus a CHF 10 wall rail. One door of clear safety glass in an aluminium frame, so no glass work; about 18 cm deep inside. The quickest way to prove the living cycle; its smaller picture is v2's job |
+| v1: plotter turned inside the box | Turning the plotter rather than the box gives about 35 × 33 cm instead of 30 × 40, and keeps the gantry beam vertical; the door stays hinged at the side |
 | Servo pen lift on a spring-loaded holder | Keeps the carriage light and frees M3 for the paper; the spring sets pen pressure in any orientation |
 | Paper: catch-free spring supply roll, worm-geared take-up | The spring keeps tension and rewinds; the worm gear holds when unpowered, because a plain NEMA17 is back-driven by the spring |
 | Replay found by margin marks | Step counts alone drift (slip, humidity, a changing roll diameter); a pigment bar read by a TCRT5000 sensor gives a fixed reference |
 | TMC2209 drivers in the frame | Every quiet build in the research uses Trinamic drivers; they fit the same carrier boards in step/dir mode |
 | Schedules stored on the Pi | Two commercial wall robots (Scribit, iBoardbot) stopped working when their makers' servers went down |
 | Pen rack that caps the pens | Pens dry out between drawings; HP's 1979 pen changer (US 4,135,245) both swapped and capped pens |
-| Box built on the plotter's aluminium frame, thin panels | The extrusion ring is already a stiff frame of the right size; panels screw into its slots, saving a separate box and about 2 kg |
-| Acrylic only for the glazing | It is denser than plywood, so it saves nothing as panels; as glazing it saves about 1 kg over glass and cannot shatter |
+| v2: box built on the plotter's aluminium frame, thin panels | The extrusion ring is already a stiff frame of the right size; panels screw into its slots, saving a separate box and about 2 kg |
+| v2: acrylic only for the glazing | It is denser than plywood, so it saves nothing as panels; as glazing it saves about 1 kg over glass and cannot shatter |
 
 ### The motors question
 
@@ -133,8 +143,14 @@ finished frame against.
 Build the CoreXY mechanics and draw on a desk first, where gravity still
 helps the pen.
 
-1. Size it: PlotteRXY's rule (X rail = paper width + 260 mm, Y rail =
-   paper length + 200 mm), adjusted to a 46 × 33 cm drawing area.
+1. Buy the BESTÅ box first and measure its inside (about 56 cm wide and
+   60 cm high, empty, without the glass shelf). In v1 the box sets the
+   plotter's size:
+   - Apply PlotteRXY's rule (X rail = drawing length + 260 mm, Y rail =
+     drawing width + 200 mm) with the X axis vertical, so the gantry beam
+     hangs vertical.
+   - That gives a drawing area of about 35 × 33 cm, with a little
+     clearance to the box.
 2. Order the PlotteRXY parts: V-slot (not plain 2020) cut to length with
    tapped ends, V-wheels with eccentric spacers (more than the BOM lists),
    GT2 belt and pulleys, fasteners. Print its parts (about 13 h of PETG).
@@ -154,13 +170,14 @@ helps the pen.
      mm/s², pen up 200 mm/s at 400 mm/s²).
 7. Calibrate steps per mm and check squareness with a drawn test square.
 
-**Gate:** an A3 drawing; a square drawn ten times on top of itself shows
-one line, under 0.3 mm spread.
+**Gate:** a full-size drawing; a square drawn ten times on top of itself
+shows one line, under 0.3 mm spread.
 
 ### Phase 3: upright (1–2 weekends)
 
-1. Mount the plotter on a board and stand it upright, landscape, beam
-   vertical.
+1. Mount the plotter in the BESTÅ box and stand it upright, gantry beam
+   vertical. Claude designs printed brackets that fix the rails to the
+   box's sides and back.
 2. Add the ADXL345 tilt sensor; the software picks the park border and
    the pen preload from gravity's direction.
 3. Test parking: drive to the padded stop at the bottom, switch the
@@ -188,13 +205,69 @@ the carriage stays parked with the drivers off.
 each landing within 1 mm of where it was drawn, with a power cut in the
 middle.
 
-### Phase 5: the enclosure (4–6 weekends)
+### Phase 5: the v1 enclosure, IKEA BESTÅ (1–2 weekends)
 
-The box is built **on** the plotter's own aluminium frame rather than
-around it. The CoreXY's 2040 rectangle is already a stiff ring about the
-size of the picture frame (about 76 × 57 cm), so thin panels screw
-straight into its slots with M5 T-nuts. No separate box, no joinery, no
-glue, and about 2 kg saved.
+The plotter already sits in the box since Phase 3. This phase turns the
+box into a picture.
+
+1. **Mat:** have a framer cut a mat to the GLASSVIK door's opening, with
+   a window of about 35 × 33 cm. Its borders (about 10–13 cm) cover
+   exactly the space the motors, the parked gantry and later the pen rack
+   need. A black mat matches the black door frame; white is the classic.
+2. Hold the mat behind the glass on magnets, so it lifts off when the
+   door opens for pens and paper.
+3. **Power:** one 12 V supply of at least 3 A for everything, with a
+   12 → 5 V buck module for the Pi and servo. The bench supply's 1.5 A is
+   too tight for motors, Pi and servo together. One cable leaves through
+   a hole in the back.
+4. Mount the Pi and drivers on the back panel inside, with one connector
+   per motor and sensor.
+5. Fit the TMC2209s in place of the DRV8825s.
+6. Hide everything:
+   - only a flat three-wire ribbon moves, to the servo;
+   - light, if any, comes from the top and bottom edges only, so the
+     gantry casts no shadow.
+7. Wall: the BESTÅ wall rail, screwed into proper wall plugs. With the
+   mechanism the box weighs about 16 kg (the empty shelf and door are
+   about 11 kg). Desk: lay it on its back on felt pads.
+
+**Gate:**
+- At rest, nothing technical is visible from the front.
+- A full live cycle runs on the wall.
+- Noise at 1 m is at or below the Phase 1C TMC2209 baseline.
+- Pens and a paper roll can be changed through the door in under five
+  minutes.
+
+### Phase 6: colours (3–5 weekends)
+
+1. Claude designs the pen holders and rack: each pen permanently in its
+   own holder with a magnet face and a three-point seat; a rack along the
+   bottom border with forks, detent magnets, a silicone cap and a sensor
+   in every slot.
+2. Print, fit four holders, calibrate each pen's offset.
+3. Claude extends the player: one layer per stroke colour, a pick, verify,
+   draw, return sequence, light colours first.
+
+**Gate:** a four-colour drawing registers within 0.2 mm between colours;
+50 pick-and-park cycles each upright and flat with no miss.
+
+### Phase 7: living with it (ongoing)
+
+- Content: the generator engine (§5) grows new families. It is pure
+  software, so it can grow at any time, independently of the hardware
+  phases.
+- A playlist page in the browser.
+- Watching pens wear out, paper choices, seasonal humidity.
+
+### v2: the own frame (after v1 works, 4–6 weekends)
+
+Once the living cycle runs in v1, v2 gives the full 46 × 33 cm landscape
+picture. The plotter is rebuilt or extended to that size, and the box is
+built **on** its aluminium frame rather than around it. The CoreXY's 2040
+rectangle is already a stiff ring the size of the picture frame (about
+76 × 57 cm), so thin panels screw straight into its slots with M5 T-nuts.
+No separate box, no joinery, no glue, and about 2 kg lighter than a
+classic box.
 
 **Structure, front to back:**
 
@@ -274,7 +347,7 @@ about 1 kg over glass and cannot shatter.
 8. Power: one 12 V supply of at least 3 A for everything, with a
    12 → 5 V buck module for the Pi and servo. The bench supply's 1.5 A is
    too tight for motors, Pi and servo together.
-9. Fit the TMC2209s in place of the DRV8825s.
+9. Move the electronics and the TMC2209 drivers over from v1.
 10. Hide everything:
     - only a flat three-wire ribbon moves, to the servo;
     - light, if any, comes from the top and bottom edges only, so the
@@ -290,27 +363,6 @@ about 1 kg over glass and cannot shatter.
 - Pens and a paper roll can be changed through the door in under five
   minutes.
 
-### Phase 6: colours (3–5 weekends)
-
-1. Claude designs the pen holders and rack: each pen permanently in its
-   own holder with a magnet face and a three-point seat; a rack along the
-   bottom border with forks, detent magnets, a silicone cap and a sensor
-   in every slot.
-2. Print, fit four holders, calibrate each pen's offset.
-3. Claude extends the player: one layer per stroke colour, a pick, verify,
-   draw, return sequence, light colours first.
-
-**Gate:** a four-colour drawing registers within 0.2 mm between colours;
-50 pick-and-park cycles each upright and flat with no miss.
-
-### Phase 7: living with it (ongoing)
-
-- Content: the generator engine (§5) grows new families. It is pure
-  software, so it can grow at any time, independently of the hardware
-  phases.
-- A playlist page in the browser.
-- Watching pens wear out, paper choices, seasonal humidity.
-
 ## 5. The content engine
 
 Without uploads, the frame still has something to draw: an engine that
@@ -321,7 +373,7 @@ same steps.
 **Pipeline:** generator → composer → path order → budget check →
 planner → player.
 - **Generators** draw *for* the frame. They receive the drawing area
-  (46 × 33 cm) and its margins, and return polylines in millimetres.
+  (about 35 × 33 cm in v1, 46 × 33 cm in v2) and its margins, and return polylines in millimetres.
   Each is a pure function of its parameters and a seed, so every picture
   can be reproduced, and each is logged.
 - **The composer** clips to the drawing area and simplifies lines (about
@@ -407,13 +459,15 @@ waves.
 | 1B | 42 cm paper roll (e.g. HP Q1446A, 90 g, 45.7 m) | to price |
 | 1B | TCRT5000 module, NEMA17 worm-gear motor | to price |
 | 1C | 2 × TMC2209 SilentStepStick (DigiKey) | CHF 28 |
-| 2 | PlotteRXY mechanics (V-slot, wheels, belts, pulleys, fasteners, PETG) | ≈ £125 |
+| 2 | IKEA BESTÅ shelf with GLASSVIK door, plus wall rail, bought first: it sets the plotter's size | CHF 118 |
+| 2 | PlotteRXY mechanics (V-slot, wheels, belts, pulleys, fasteners, PETG), sized to the box | ≈ £100–125 |
 | 2 | hall sensors and magnets, SG90 or MG90S servo | CHF 15 |
 | 3 | ADXL345 module | to price |
-| 5 | laser-cut panels, mat board, AR acrylic, bezel moulding, hinges, magnets, M5 standoffs and T-nuts, cleat batten | to price |
+| 5 | mat cut by a framer, magnets, felt pads | to price |
 | 5 | 12 V / 3 A supply, 12 → 5 V buck module, LED strip | to price |
 | 5 | 1 more TMC2209 | CHF 14 |
 | 6 | magnets, steel balls, silicone caps, 4 slot sensors | CHF 20–40 |
+| v2 | laser-cut panels, mat board, AR acrylic, bezel moulding, hinges, magnets, M5 standoffs and T-nuts, cleat batten, longer extrusions | to price |
 
 "To price" items get priced when their phase starts; prices move.
 
@@ -430,12 +484,14 @@ waves.
 
 ## 9. Open decisions
 
-- **Picture size.** 46 × 33 cm is the default; larger means a heavier,
-  bigger frame.
-- **Panels and finish.** Poplar plywood (lightest, paintable or
+- **Picture size.** v1 is set by the BESTÅ box: about 35 × 33 cm. v2:
+  46 × 33 cm by default; larger means a heavier, bigger frame.
+- **Mat colour (v1).** Black matches the GLASSVIK door frame; white is
+  the classic gallery look.
+- **Panels and finish (v2).** Poplar plywood (lightest, paintable or
   veneered) or aluminium composite (a modern, flat look, cut by a sign
   maker). The look is yours.
-- **Glazing.** Anti-reflective acrylic is the default; glass looks a
+- **Glazing (v2).** Anti-reflective acrylic is the default; glass looks a
   little crisper but weighs about 1 kg more and can shatter.
 - **Lighting.** Edge LEDs make the drawing visible at night, but need
   hiding too.
