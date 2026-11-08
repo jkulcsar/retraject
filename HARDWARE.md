@@ -203,7 +203,9 @@ of a WebSocket; the protocol is unchanged.
 3. **The rig** (open-ended): three motors on an actual mechanism — the
    dream candidate is a small pen plotter drawing the TCP path of a
    taught program, so the trajectory mathematics leaves a physical trace
-   on paper. The 1997 thesis, with a souvenir.
+   on paper. The 1997 thesis, with a souvenir. The rig now has a
+   concrete design and a phased build plan: a self-drawing picture frame
+   with a paper roll, in [`LIVING_PICTURE.md`](LIVING_PICTURE.md).
 
 ## 8. Bill of materials (3-axis bench)
 

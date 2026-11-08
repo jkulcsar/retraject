@@ -53,6 +53,7 @@ document; this list is the map:
 | [`src/planner/README.md`](src/planner/README.md) | The integration layer closing the 1997 loop: multi-segment path planning over the trajectory primitives (the modern `Robot::SetUpTime`), teach-pendant Cartesian programming through the IK, Cartesian line moves ("MoveL") with honest failure reporting, and the end-to-end pipeline test |
 | [`src/stepper/README.md`](src/stepper/README.md) | The homage: the 1997 execution layer (TCA pulse quantization, the INT 08h countdown, the LPT1 pulses) modeled faithfully — including the real mid-division ripple of the original scheme — and given its first graphical representation, DOS console reproduction included |
 | [`HARDWARE.md`](HARDWARE.md) | The plan for the final loop-closing: driving real stepper motors from the browser (a WebSocket to a 2014 Raspberry Pi whose DMA engine replays host-computed pulse schedules — the 1997 architecture with the 8253 reborn as a hardware-paced DMA engine; an RP2040 Pico as fallback), protocol, executor sketch, constraints, phases, and a $66 bill of materials |
+| [`LIVING_PICTURE.md`](LIVING_PICTURE.md) | The rig: a pen plotter in a picture frame under glass that draws a new picture every few hours on a paper roll and replays past drawings; decisions and their reasons, a phased build plan with a test gate per phase, the GPIO and power plan, shopping by phase, and the risk register |
 
 The revival is **complete and then some** — core arc, flourishes, and the
 extensions beyond the original roadmap: trajectory laws, via-point
