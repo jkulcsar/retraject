@@ -223,28 +223,40 @@ With the fallback Pico instead of the Pi, add about $5.
 The table above is the generic shape. This is the same bench priced at
 one shop that stocks every part (bastelgarage.ch; CHF incl. VAT, read
 from the product pages on 2026-10-25), adjusted for a builder with no
-soldering iron and no bench supply. Revised 2026-11-08: the owned Pi
-replaces the Pico 2H (CHF 9.90) and its USB cable (CHF 10.90).
+soldering iron and no bench supply. Revised 2026-11-08, with prices and
+stock re-checked that day:
+- the owned Pi replaces the Pico 2H (CHF 9.90) and its USB cable
+  (CHF 10.90);
+- an owned multimeter and an owned 12 V / 1.5 A supply replace the XL830L
+  and the 12 V / 4 A supply (CHF 18.90 each);
+- the full-size breadboard is sold out, and a half-size one is enough
+  here.
 
-**Phase 1, one axis: CHF 87.10** (free shipping above CHF 80)
+**Phase 1, one axis: CHF 46.30**
 
 | Item | Product | CHF |
 |---|---|---|
 | Executor | Raspberry Pi 1 Model B+ with 64 GB card, USB charger, micro-USB cable, Ethernet cable | owned |
 | Driver | DRV8825 module, stick-on heatsink included | 7.90 |
-| Driver carrier | single-driver carrier for DRV8825/A4988: 12–24 V screw terminal, 100 µF/35 V capacitor on board, microstepping DIP switches, 4-pin XH motor socket | 4.90 |
+| Driver carrier | single-driver carrier for DRV8825/A4988: 12–24 V motor supply, 3–5.5 V logic; screw terminal, 100 µF capacitor, microstepping DIP switches and 4-pin XH motor socket as described in October (the current page text lists only the two voltages) | 4.90 |
 | Motor | NEMA17 17HS4401: 1.8°, 1.7 A/phase, 0.45 Nm | 14.90 |
 | Motor cable | 6-pin PH2.0 → 4-pin XH2.54, 1 m | 2.90 |
-| Power | 12 V / 4 A closed plug-in supply, 5.5/2.1 mm plug | 18.90 |
-| Jack adapter | 5.5/2.1 mm DC socket with screw terminals | 1.90 |
-| Multimeter | XL830L (200 mV and 2 V DC ranges, enough to set Vref) | 18.90 |
-| Breadboard | full size, 830 points | 7.90 |
-| Jumper wires | Dupont set, M/M, M/F and F/F (F/F joins the Pi's header to the carrier) | 8.90 |
+| Power | 12 V / 1.5 A DC plug-in supply | owned |
+| Jack adapter | 5.5/2.1 mm DC socket with screw terminals (match the supply's plug) | 1.90 |
+| Multimeter | any digital multimeter with a 2 V (or auto) DC range and a 200 Ω range | owned |
+| Breadboard | half size, 400 points: only shares 3V3 and GND between the carriers | 4.90 |
+| Jumper wires | Dupont set, 20 cm, 20 each of M/M, M/F and F/F (F/F joins the Pi's header to the carrier) | 8.90 |
 
 **Phase 2, two more axes: CHF 61.20.** 2 × driver, 2 × carrier,
-2 × motor, 2 × cable. The 12 V / 4 A supply covers all three motors:
-a chopper driver draws far less from the supply than its coil current.
-Both phases in one order: CHF 148.30.
+2 × motor, 2 × cable. The owned 12 V / 1.5 A supply covers all three
+motors at bench loads. A chopper driver draws roughly the power the motor
+uses, not its coil current: about 0.3–0.4 A per motor at 1.0–1.2 A coil
+current, so around 1 A for three. If a loaded mechanism later runs fast,
+watch for the supply cutting out.
+
+**Both phases in one order: CHF 107.50**, which clears the CHF 80
+free-shipping threshold. Below it, shipping costs CHF 6.90 (Economy) or
+CHF 8.90 (Priority).
 
 What changed against the generic table, and why:
 
@@ -258,7 +270,8 @@ What changed against the generic table, and why:
   touches the breadboard, and the ≥ 47 µF bulk capacitor the driver
   needs is already on the board.
 - **A closed plug-in supply** instead of an open-frame PSU: no mains
-  wiring anywhere.
+  wiring anywhere. It must be DC (`12V ⎓` on the label); an old AC
+  adapter would destroy the driver.
 - **A multimeter**, without which the current limit cannot be set.
 - **If the fallback Pico is ever needed:** a Pico 2H (RP2350, headers
   pre-soldered, CHF 9.90; same PIO with 12 state machines instead of 8,
@@ -275,7 +288,9 @@ What changed against the generic table, and why:
 2. Set Vref with no motor connected; then power off, connect the motor,
    power on.
 3. Keep 12 V off the breadboard and away from the Pi: jack adapter →
-   carrier screw terminal, nothing else.
+   carrier screw terminal, nothing else. Before the first connection,
+   measure the jack adapter's terminals: +12 V must be on the + terminal.
+   The carriers have no reverse-polarity protection.
 4. Feed the carrier's logic pin from the Pi's 3V3 (header pin 1 or 17),
    never 5 V, and tie the Pi's GND (pin 6) to the carrier's GND.
 5. Before the first power-up, check with the multimeter: RST and SLP
