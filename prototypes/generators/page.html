@@ -1,0 +1,271 @@
+<title>Living Picture Generators</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: fourth sheet in the retraject plotter set. Title block, the pipeline strip,
+   six generator cards (each a framed preview with mat, its physics and its budget),
+   a series shown as a film strip, then notes. The frame, mat and paper are physical
+   objects and keep their colours in both themes; the page around them follows the theme. */
+:root {
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --mat: #efeee8;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #898781;
+  --grid: #e1e0d9;
+  --axis: #b5b4a9;
+  --border: rgba(11, 11, 11, 0.1);
+  --move: #1f4fd1;
+  --move-soft: rgba(31, 79, 209, 0.1);
+  --ok: #1d7a5a;
+  --ok-soft: rgba(29, 122, 90, 0.12);
+  --warn: #9a5b00;
+  --warn-soft: rgba(154, 91, 0, 0.12);
+  --moulding: #2a2927;
+  --matboard: #f2f0e9;
+  --sheet: #fbfaf6;
+  --penink: #1d1d22;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0d0d0d; --surface: #1a1a19; --mat: #131312;
+    --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #898781; --grid: #262624; --axis: #55554f;
+    --border: rgba(255, 255, 255, 0.1);
+    --move: #82a6ff; --move-soft: rgba(130, 166, 255, 0.13);
+    --ok: #5cc79c; --ok-soft: rgba(92, 199, 156, 0.14);
+    --warn: #e9b062; --warn-soft: rgba(233, 176, 98, 0.12);
+    --moulding: #3a3936;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0d0d0d; --surface: #1a1a19; --mat: #131312;
+  --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #898781; --grid: #262624; --axis: #55554f;
+  --border: rgba(255, 255, 255, 0.1);
+  --move: #82a6ff; --move-soft: rgba(130, 166, 255, 0.13);
+  --ok: #5cc79c; --ok-soft: rgba(92, 199, 156, 0.14);
+  --warn: #e9b062; --warn-soft: rgba(233, 176, 98, 0.12);
+  --moulding: #3a3936;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 400 15.5px/1.6 var(--body); }
+.sheetpage {
+  max-width: 1180px; margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 56px;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(44px, 7vw, 76px); }
+h2 { font-size: 32px; }
+h3 { font-size: 26px; }
+p { margin: 0; }
+a { color: var(--move); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--move); outline-offset: 2px; }
+.eyebrow { font: 500 12px/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+.prose { max-width: 68ch; color: var(--ink-2); }
+
+.head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 40px; align-items: end; }
+.head-text { display: grid; gap: 14px; min-width: 0; }
+.lede { font-size: 18px; line-height: 1.55; max-width: 62ch; color: var(--ink-2); }
+.titleblock { border-collapse: collapse; width: 100%; font: 400 13px/1.4 var(--mono); border: 1.5px solid var(--ink); }
+.titleblock th, .titleblock td { border: 1px solid var(--axis); padding: 6px 10px; text-align: left; vertical-align: top; }
+.titleblock th { font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; width: 28%; }
+
+.group { display: grid; gap: 20px; }
+.group-head { display: grid; gap: 8px; }
+
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 22px; }
+.flow li { position: relative; display: grid; gap: 3px; align-content: start; padding: 12px 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; min-width: 0; }
+.flow li::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink-3); font: 500 14px var(--mono); }
+.flow li:last-child::after { content: none; }
+.flow .k { font: 600 14px/1.25 var(--body); }
+.flow .v { font: 400 12.5px/1.35 var(--mono); color: var(--ink-2); }
+.flow .hot { border-color: var(--move); background: var(--move-soft); }
+
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.card { display: grid; align-content: start; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; min-width: 0; }
+.card header { display: grid; gap: 4px; }
+.tag { font: 500 11.5px/1.3 var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.art { background: var(--moulding); padding: 9px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 18px rgba(0,0,0,0.12); }
+.art .matb { background: var(--matboard); padding: 6.5%; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+.art .sheet { background: var(--sheet); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), inset 1px 1px 3px rgba(0,0,0,0.12); line-height: 0; }
+.art svg { width: 100%; height: auto; display: block; }
+.art path.inkline { fill: none; stroke: var(--penink); stroke-width: 0.75; stroke-linecap: round; stroke-linejoin: round; }
+.art.small { padding: 5px; }
+.art.small .matb { padding: 7%; }
+.art.small path.inkline { stroke-width: 1.1; }
+
+.row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.params { font: 500 12.5px/1.4 var(--mono); color: var(--move); min-width: 0; }
+button { font: 600 13px var(--body); color: var(--ink); background: var(--mat); border: 1px solid var(--axis); border-radius: 4px; padding: 7px 12px; cursor: pointer; }
+button:hover { border-color: var(--ink-2); }
+button:disabled { opacity: 0.6; cursor: progress; }
+.text { font-size: 14.5px; color: var(--ink-2); }
+.formula { font: 500 13px/1.5 var(--mono); color: var(--ink); background: var(--mat); padding: 8px 10px; border-radius: 4px; overflow-wrap: anywhere; }
+.facts { margin: 0; display: grid; border-top: 1px solid var(--border); }
+.facts > div { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: baseline; }
+.facts dt { font: 500 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+.facts dd { margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; min-width: 0; }
+.chip { display: inline-block; font: 600 11px/1 var(--mono); padding: 4px 6px; border-radius: 3px; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.chip.ok { color: var(--ok); background: var(--ok-soft); }
+.chip.over { color: var(--warn); background: var(--warn-soft); }
+
+.strip { list-style: none; margin: 0; padding: 4px 2px 14px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: 16px; overflow-x: auto; }
+.strip li { display: grid; gap: 8px; min-width: 0; }
+.cap { font: 500 12.5px var(--mono); color: var(--ink-2); }
+.cap b { color: var(--move); margin-right: 6px; }
+
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 28px; }
+.notes section { display: grid; gap: 6px; align-content: start; padding-top: 12px; border-top: 2px solid var(--ink); min-width: 0; }
+.notes h3 { font-size: 22px; }
+.notes p, .notes li { font-size: 14.5px; color: var(--ink-2); }
+.notes ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.foot { display: grid; gap: 8px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--border); padding-top: 18px; max-width: 92ch; }
+
+@media (max-width: 1000px) {
+  .flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .flow li:nth-child(3)::after { content: none; }
+  .notes { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 860px) {
+  .head, .cards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .flow li::after { content: "↓"; right: auto; left: 18px; top: auto; bottom: -19px; transform: none; }
+  .flow li:nth-child(3)::after { content: "↓"; }
+  .flow li:last-child::after { content: none; }
+  .facts > div { grid-template-columns: 96px minmax(0, 1fr); }
+}
+</style>
+
+<main class="sheetpage">
+
+  <header class="head">
+    <div class="head-text">
+      <p class="eyebrow">Retraject plotter set · generator prototypes, 2026-11-08</p>
+      <h1>Picture generators</h1>
+      <p class="lede">What the living picture could draw on its own. Six families from waves, fluids, quantum mechanics and dynamics, each computed for the real 46 × 33 cm drawing area, checked against the drawing-time and ink budget, and drawn here as the plotter would draw them. Press “New variation” on any card to compute another one in your browser.</p>
+    </div>
+    <table class="titleblock" aria-label="Assumptions behind the previews">
+      <tbody>
+        <tr><th scope="row">Drawing</th><td>460 × 330 mm, 8 mm inner margin</td></tr>
+        <tr><th scope="row">Pen</th><td>0.3 mm fineliner; previews draw lines a little thicker</td></tr>
+        <tr><th scope="row">Speeds</th><td>pen down 50 mm/s, up 200 mm/s, 0.24 s per lift</td></tr>
+        <tr><th scope="row">Budget</th><td>≤ 40 min; ≤ 45 mm of line per 5 mm square</td></tr>
+        <tr><th scope="row">Code</th><td>pure functions, a few hundred lines, no libraries</td></tr>
+      </tbody>
+    </table>
+  </header>
+
+  <section class="group" aria-labelledby="pipe-h">
+    <div class="group-head">
+      <h2 id="pipe-h">From formula to ink</h2>
+      <p class="prose">Every picture on this page went through the same steps the frame will use. Uploaded SVG or DXF drawings would join at the composer.</p>
+    </div>
+    <ol class="flow">
+      <li class="hot"><span class="k">Generator</span><span class="v">mathematics → lines in mm, for this frame</span></li>
+      <li><span class="k">Composer</span><span class="v">clip, ink limit, simplify to 0.1 mm</span></li>
+      <li><span class="k">Order</span><span class="v">nearest line next, reversed if closer, ends joined</span></li>
+      <li><span class="k">Budget</span><span class="v">time, coverage, densest spot</span></li>
+      <li><span class="k">Planner</span><span class="v">retraject's trajectories → steps</span></li>
+      <li><span class="k">Pi 1</span><span class="v">pigpio waves → pen on paper</span></li>
+    </ol>
+  </section>
+
+  <section class="group" aria-labelledby="gen-h">
+    <div class="group-head">
+      <p class="eyebrow">Six families</p>
+      <h2 id="gen-h">What the frame could draw by itself</h2>
+      <p class="prose">All of them are lines a pen draws well: contour lines, streamlines, nodal lines and trajectories. Each picture is fully determined by its parameters and seed, so it can be redrawn exactly.</p>
+    </div>
+    <div class="cards"><!--CARDS-->
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="series-h">
+    <div class="group-head">
+      <p class="eyebrow">A roll as a film strip</p>
+      <h2 id="series-h">One series: the cylinder starts to spin</h2>
+      <p class="prose">A curator picks one family and one parameter sweep per roll. Here the circulation grows from zero, where the flow is symmetric, to 4πUa, where the two stagnation points meet under the cylinder. Gallery mode would replay the roll in this order, one picture every few hours.</p>
+    </div>
+    <ol class="strip"><!--SERIES-->
+    </ol>
+  </section>
+
+  <section class="group" aria-labelledby="notes-h">
+    <div class="group-head">
+      <h2 id="notes-h">What the prototype shows, and what's next</h2>
+    </div>
+    <div class="notes">
+      <section>
+        <h3>Shown</h3>
+        <ul>
+          <li>Every family fills the real frame; none needs rescaling afterwards.</li>
+          <li>Each picture computes in tens of milliseconds in a browser; on a Pi 1, about 30 times slower, that is still a couple of seconds against 5–25 minutes of drawing.</li>
+          <li>The ink limiter is real: it thinned the crowded slit region of the double slit and the fading centre of the harmonograph.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Not yet</h3>
+        <ul>
+          <li>The signature caption in a single-stroke plotter font.</li>
+          <li>Several colours, one layer per pen.</li>
+          <li>Retraject's own tool paths as a family.</li>
+          <li>A check for large empty areas, beyond the coverage number.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Next</h3>
+        <ul>
+          <li>Move the generators into the repo as TypeScript (<code>src/generators/</code>) with tests: every family stays inside the frame and the budget, and the same seed gives the same picture.</li>
+          <li>A generator page in the explorer, next to the others.</li>
+          <li>Then the curator and the series player on the Pi (Phase 4).</li>
+        </ul>
+      </section>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Previews are computed by the same code that runs when you press a button: marching squares for the contour families, fourth-order Runge–Kutta for the Bohmian trajectories, and the Jobard–Lefer method for evenly spaced streamlines. The Bohmian trajectories use the exact free evolution of two Gaussian packets (ħ = m = 1). Drawing times assume the plan's speeds and ignore acceleration, so real times run a little longer.</p>
+  </footer>
+
+</main>
+
+<script type="module">
+/*GENJS*/
+
+for (const card of document.querySelectorAll('[data-gen]')) {
+  const key = card.dataset.gen;
+  let seed = Number(card.dataset.seed);
+  const btn = card.querySelector('button');
+  btn.addEventListener('click', () => {
+    seed += 1;
+    btn.disabled = true;
+    btn.textContent = 'Drawing…';
+    requestAnimationFrame(() => setTimeout(() => {
+      try {
+        const g = GENERATORS[key];
+        const r = make(key, g.vary(seed));
+        card.querySelector('[data-role="svg"]').innerHTML = toSVG(r.paths, { label: card.querySelector('h3').textContent });
+        card.querySelector('[data-role="label"]').textContent = r.label;
+        card.querySelector('[data-role="stats"]').innerHTML = statsHTML(r.stats);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'New variation';
+      }
+    }, 20));
+  });
+}
+</script>
