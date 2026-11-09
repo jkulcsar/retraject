@@ -74,27 +74,34 @@ browser (existing code)                 Raspberry Pi 1 B+ (on the LAN)       pow
 
 ## 3. The protocol (host ↔ executor)
 
-Binary, framed, credit-based — small enough to specify completely. Each
-frame travels as one binary WebSocket message:
+Binary, framed, credit-based, and small enough to specify completely.
+Each frame travels as one binary WebSocket message. The full byte layout
+is in [`pi/bridge/PROTOCOL.md`](pi/bridge/PROTOCOL.md):
 
 | Frame | Payload | Direction |
 |---|---|---|
-| `HELLO` | protocol version, axis count, max buffer | executor → host on connect |
-| `CHUNK n` | n × (Δt: uint16 µs, stepMask: uint8, dirMask: uint8) | host → executor |
-| `ACK k` | chunks consumed since last ACK | executor → host (flow control) |
-| `START` / `STOP` | — | host → executor |
-| `ESTOP` | — | host → executor, also implied when the WebSocket closes |
-| `DONE` | pulses executed, µs elapsed | executor → host |
+| `HELLO` | protocol version, axis count, chunk size, buffer size, minimum record spacing | executor → host on connect |
+| `CHUNK seq` | n × (Δt: uint16 µs, stepMask: uint8, dirMask: uint8) | host → executor |
+| `ACK` | chunks of this run turned into waves so far | executor → host (flow control) |
+| `START` | — enable the drivers and play | host → executor |
+| `STOP` | — no more records: play the rest, then report | host → executor |
+| `ESTOP` | — halt now; also implied when the WebSocket closes | host → executor |
+| `DONE` | status, exact flag, records, µs elapsed, per-axis pulses and net steps | executor → host |
+| `ERROR` | code, message | executor → host |
 
-Flow control is the part 1997 never needed (the schedule lived in RAM):
-the host keeps the executor's buffer between ⅓ and ⅔ full, sending a new
-`CHUNK` per `ACK`. On the Pi the buffer is two padded wave slots. Each
-slot gets half of pigpio's 25,016 DMA control blocks; at about two
-control blocks per pulse and two to three pulses per record, that is
-about 2,000 records, or roughly a second of motion at a 2 kHz aggregate
-step rate. Network hiccups vanish inside it. `Δt` as uint16 µs caps one
-record at 65 ms; longer gaps emit zero-mask keepalive records (exactly
-the NQPD+1 "no pulse" trick, reborn).
+Flow control is the part 1997 never needed (the schedule lived in RAM).
+The host buffers a few chunks, sends `START`, then one new `CHUNK` per
+`ACK`, never more than the executor's announced capacity in flight. On
+the Pi, two padded pigpio waves are queued back to back; each holds at
+most 3,600 pulses (well inside half of pigpio's 25,016 DMA control
+blocks) and at most 500 ms of motion, so a stalled bridge stops the
+motors within about a second. Network hiccups vanish inside the host-side
+buffer of six 1,024-record chunks. `Δt` as uint16 µs caps one record at
+65 ms; longer gaps emit zero-mask keepalive records (exactly the NQPD+1
+"no pulse" trick, reborn).
+
+`DONE` is what the Phase 0 gate checks: the per-axis step counts the Pi
+actually played, compared with the counts the host planned.
 
 ## 4. Executor sketch
 
@@ -102,24 +109,29 @@ the NQPD+1 "no pulse" trick, reborn).
 
 1. **pigpiod**, set up once: build pigpio v79 from source (`make`,
    `sudo make install`, `sudo ldconfig`) and run it as a systemd service.
-2. **The bridge**, for each `CHUNK`:
-   - Turn each record into pulses. One pulse clears the previous step
-     bits and sets the new direction bits; the next raises the step bits.
-   - Add the pulses to the next padded wave. `gpioWaveCreatePad(50, 50, 0)`
-     gives two slots with half the resources each.
-   - Queue the wave with `PI_WAVE_MODE_ONE_SHOT_SYNC`.
-   - When `gpioWaveTxAt()` reports the new slot transmitting, delete the
-     old one and send `ACK`.
+2. **The bridge** ([`pi/bridge/`](pi/bridge/)), while a run plays:
+   - Turn records into pulses: direction pins (only when one changes),
+     then step pins high, then low. Waves are cut at record boundaries
+     and each ends exactly where the next begins, so the queued waves
+     form one continuous timeline.
+   - Upload the pulses as one packed buffer and create a padded wave
+     (`wave_create_and_pad(50)`: two slots with half the resources each).
+   - Queue it with `PI_WAVE_MODE_ONE_SHOT_SYNC`.
+   - When `wave_tx_at()` reports the next slot transmitting, count and
+     delete the finished wave. Send `ACK` whenever a chunk has been fully
+     turned into waves.
 3. **Pulse timing.** pigpio's waves are "accurate to a few
    microseconds", so step pulses are 10 µs high and at least 10 µs low,
-   and direction changes land at least 5 µs before the step edge. That
+   and direction changes land 10 µs before the step edge: records are at
+   least 30 µs apart. That
    is well inside the DRV8825's limits (≥ 1.9 µs high and low, ≥ 650 ns
    direction setup) and the A4988's (~1 µs), and 10 µs pulses still fit
    at 20 kHz per axis (a 50 µs period). The 1997 code's three `uiTemp++`
    delay lines were this exact concern.
-4. **`ESTOP`, or the WebSocket closing:** `gpioWaveTxStop`, step lines
-   low, report position lost. If the bridge itself dies, the slot already
-   queued finishes (at most about a second) and motion stops. The 12 V
+4. **`ESTOP`, or the WebSocket closing:** `wave_tx_stop`, step lines
+   low, drivers disabled (GPIO 5, active low), `DONE` with the exact flag
+   cleared: position lost, re-home. If the bridge itself dies, at most the
+   two queued waves finish (500 ms each) and motion stops. The 12 V
    switch is the hard stop.
 
 Pin map. All step and direction pins are GPIOs that default to pull-down

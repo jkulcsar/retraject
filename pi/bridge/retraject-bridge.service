@@ -1,0 +1,15 @@
+[Unit]
+Description=retraject stepper bridge (WebSocket in, pigpio waves out)
+Requires=pigpiod.service
+After=pigpiod.service network-online.target
+Wants=network-online.target
+
+[Service]
+User=user
+ExecStart=/usr/bin/python3 /opt/retraject-bridge/bridge.py --config /etc/retraject-bridge.toml
+# pigpiod may need a moment after boot; the bridge exits and is restarted
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

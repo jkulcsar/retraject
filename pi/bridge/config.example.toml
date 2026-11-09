@@ -1,0 +1,34 @@
+# retraject bridge configuration. Installed as /etc/retraject-bridge.toml.
+# Every value shown is the default; delete what you don't change.
+
+[server]
+host = "0.0.0.0"      # listen on the LAN; use "127.0.0.1" for local tests only
+port = 8765
+
+[pins]
+# BCM GPIO numbers, one entry per axis (HARDWARE.md §4.1). All step and
+# direction pins default to pull-down at power-on, so they stay low at boot.
+step = [17, 22, 24]
+dir = [27, 23, 25]
+enable = 5            # shared driver enable, active low; -1 if not wired
+invert_dir = [false, false, false]   # flip an axis whose motor runs backwards
+
+[timing]
+# Step pulses: direction set dir_lead_us before the step edge, step held high
+# step_high_us, then low at least step_low_min_us. Their sum (30 µs) is the
+# minimum record spacing the bridge accepts. DRV8825 needs 0.65 / 1.9 / 1.9 µs.
+dir_lead_us = 10
+step_high_us = 10
+step_low_min_us = 10
+
+[buffer]
+max_records_per_chunk = 1024
+capacity_chunks = 6           # chunks the host may have in flight
+max_pulses_per_wave = 3600    # pulses per pigpio wave, at most 5000; two waves are queued
+max_wave_ms = 500             # time per wave: if the bridge dies, motion stops within ~1 s
+wave_slot_percent = 50        # each wave gets half of pigpio's wave resources
+
+[behaviour]
+disable_when_idle = true      # drivers off after each run (quiet, cool; on a
+                              # vertical frame the gantry must be parked first)
+poll_ms = 10                  # how often the player checks pigpio

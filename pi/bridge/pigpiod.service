@@ -1,0 +1,11 @@
+[Unit]
+Description=pigpio daemon (DMA-timed GPIO), localhost only
+After=network.target
+
+[Service]
+Type=forking
+# -l: no remote socket; only programs on this Pi can talk to pigpiod
+ExecStart=/usr/local/bin/pigpiod -l
+
+[Install]
+WantedBy=multi-user.target

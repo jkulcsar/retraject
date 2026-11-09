@@ -85,11 +85,14 @@ else stands on.
 
 1. Order the kit (`HARDWARE.md` §8.1). Set Vref on one driver with no
    motor connected, then wire one axis on the breadboard.
-2. Make pigpio's daemon a system service on the Pi that starts at boot.
-3. Claude writes the bridge: a Python service in a virtual environment,
+2. Make pigpio's daemon a system service on the Pi that starts at boot
+   (the bridge's `install.sh` does this).
+3. **Done:** Claude wrote the bridge, [`pi/bridge/`](pi/bridge/): a
+   Python service on the system Python (plus apt's `python3-websockets`),
    WebSocket in, padded pigpio waves out, with `ACK`, `ESTOP`, a
    stop-on-disconnect, and a `DONE` report that carries per-axis step
-   counts.
+   counts. On the Pi: `sh install.sh`, then `bench_waves.py --pigpio`
+   (can a Pi 1 build waves fast enough?) and `send_move.py`.
 4. Claude writes the browser side: `src/hardware/socket.ts` and
    `encode.ts`, plus a hardware panel in the explorer.
 5. First move: one axis, one quintic profile, filmed in slow motion.
