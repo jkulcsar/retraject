@@ -105,6 +105,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--move); outline-
 .art.small { padding: 5px; }
 .art.small .matb { padding: 7%; }
 .art.small path.inkline { stroke-width: 1.1; }
+.art canvas { width: 100%; height: auto; display: block; }
+.stepsfig { margin: 0; display: grid; gap: 4px; }
+.stepsfig figcaption { font-size: 13.5px; color: var(--ink-3); }
+.strip.four { grid-auto-columns: minmax(170px, 1fr); }
 
 .row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
 .params { font: 500 12.5px/1.4 var(--mono); color: var(--move); min-width: 0; }
@@ -156,14 +160,14 @@ button:disabled { opacity: 0.6; cursor: progress; }
     <div class="head-text">
       <p class="eyebrow">Retraject plotter set · generator prototypes, 2026-11-08</p>
       <h1>Picture generators</h1>
-      <p class="lede">What the living picture could draw on its own. Six families from waves, fluids, quantum mechanics and dynamics, each computed for the real 46 × 33 cm drawing area, checked against the drawing-time and ink budget, and drawn here as the plotter would draw them. Press “New variation” on any card to compute another one in your browser.</p>
+      <p class="lede">What the living picture could draw on its own. New on this sheet: sweeps, one line of fluid drawn hundreds of times, the technique behind Stoli's veils. Below them, the first six families from waves, fluids, quantum mechanics and dynamics. Every picture is checked against its drawing time and ink budget and shown as the plotter would draw it. Press “New variation” on any card to compute another one in your browser.</p>
     </div>
     <table class="titleblock" aria-label="Assumptions behind the previews">
       <tbody>
-        <tr><th scope="row">Drawing</th><td>460 × 330 mm, 8 mm inner margin</td></tr>
-        <tr><th scope="row">Pen</th><td>0.3 mm fineliner; previews draw lines a little thicker</td></tr>
+        <tr><th scope="row">Drawing</th><td>sweeps: 350 × 330 mm (v1 cabinet) · six families: 460 × 330 mm (v2)</td></tr>
+        <tr><th scope="row">Pen</th><td>sweeps: pressurised ballpoint, ink-stacking preview · six families: 0.3 mm fineliner</td></tr>
         <tr><th scope="row">Speeds</th><td>pen down 50 mm/s, up 200 mm/s, 0.24 s per lift</td></tr>
-        <tr><th scope="row">Budget</th><td>≤ 40 min; ≤ 45 mm of line per 5 mm square</td></tr>
+        <tr><th scope="row">Budget</th><td>sweeps: about an hour, ≤ 300 mm per 5 mm square · six: ≤ 40 min, ≤ 45 mm</td></tr>
         <tr><th scope="row">Code</th><td>pure functions, a few hundred lines, no libraries</td></tr>
       </tbody>
     </table>
@@ -184,9 +188,38 @@ button:disabled { opacity: 0.6; cursor: progress; }
     </ol>
   </section>
 
+  <section class="group" aria-labelledby="sweep-h">
+    <div class="group-head">
+      <p class="eyebrow">New family · after Stoli's wall plotter</p>
+      <h2 id="sweep-h">Sweeps: one line, drawn hundreds of times</h2>
+      <p class="prose">Stoli's drawings get their depth from stacking, not from a cleverer formula. A short arc of fluid is carried through a swirling flow and drawn again every few moments. Hundreds of nearly identical curves read as a translucent veil: darker where they bunch up, with a dark crease and a crosshatch where the veil folds over itself. The flow here is a central vortex in turbulence (random waves with Kolmogorov's spectrum); in Folds and Satellites a breathing ring of satellite vortices folds the veils further.</p>
+    </div>
+    <figure class="stepsfig">
+      <ol class="strip four"><!--STEPS-->
+      </ol>
+      <figcaption>One sheet of Veils after 1, 4, 15 and all 55 snapshots. Each snapshot is the same line of fluid a moment later.</figcaption>
+    </figure>
+    <div class="cards"><!--SWEEPS-->
+    </div>
+    <div class="notes">
+      <section>
+        <h3>The pen makes it possible</h3>
+        <p>The previews add ink wherever lines cross, the way layered ballpoint lines darken on paper. Stoli draws with pressurised ballpoint refills (Uni PowerTank): they write on a vertical sheet, do not dry out uncapped, and take hundreds of passes without soaking the paper. A fineliner could not, which is why the six families below keep a 45 mm cap.</p>
+      </section>
+      <section>
+        <h3>The ink cap is a placeholder</h3>
+        <p>300 mm of line per 5 mm square is about four full coverings of a 0.35 mm line. It trims only the very densest spots. The pen test in Phase 1A sets the real figure for the chosen pen and paper.</p>
+      </section>
+      <section>
+        <h3>Computation is part of the work</h3>
+        <p>A sweep computes in seconds here and in minutes on a Pi 1, then draws for about an hour. Longer runs, more sheets and finer turbulence cost only time, and the frame can compute the next picture while the current one hangs.</p>
+      </section>
+    </div>
+  </section>
+
   <section class="group" aria-labelledby="gen-h">
     <div class="group-head">
-      <p class="eyebrow">Six families</p>
+      <p class="eyebrow">The first six families</p>
       <h2 id="gen-h">What the frame could draw by itself</h2>
       <p class="prose">All of them are lines a pen draws well: contour lines, streamlines, nodal lines and trajectories. Each picture is fully determined by its parameters and seed, so it can be redrawn exactly.</p>
     </div>
@@ -231,6 +264,7 @@ button:disabled { opacity: 0.6; cursor: progress; }
         <ul>
           <li>Move the generators into the repo as TypeScript (<code>src/generators/</code>) with tests: every family stays inside the frame and the budget, and the same seed gives the same picture.</li>
           <li>A generator page in the explorer, next to the others.</li>
+          <li>The pen test (Phase 1A): pressurised ballpoint on the chosen paper, to set the sweeps' ink cap.</li>
           <li>Then the curator and the series player on the Pi (Phase 4).</li>
         </ul>
       </section>
@@ -238,13 +272,56 @@ button:disabled { opacity: 0.6; cursor: progress; }
   </section>
 
   <footer class="foot">
-    <p>Previews are computed by the same code that runs when you press a button: marching squares for the contour families, fourth-order Runge–Kutta for the Bohmian trajectories, and the Jobard–Lefer method for evenly spaced streamlines. The Bohmian trajectories use the exact free evolution of two Gaussian packets (ħ = m = 1). Drawing times assume the plan's speeds and ignore acceleration, so real times run a little longer.</p>
+    <p>Previews are computed by the same code that runs when you press a button: marching squares for the contour families, fourth-order Runge–Kutta for the Bohmian trajectories, and the Jobard–Lefer method for evenly spaced streamlines. The Bohmian trajectories use the exact free evolution of two Gaussian packets (ħ = m = 1). Sweeps carry every particle with fourth-order Runge–Kutta, add particles where neighbours drift more than 1 mm apart, and preview the ink with Beer–Lambert absorption: each layer of ink takes away a share of the light. Drawing times assume the plan's speeds and ignore acceleration, so real times run a little longer.</p>
   </footer>
 
 </main>
 
 <script type="module">
 /*GENJS*/
+
+// Previews ship as grey ink density; colour them with the ink model.
+for (const cv of document.querySelectorAll('canvas[data-gray]')) {
+  const im = new Image();
+  im.onload = () => {
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(im, 0, 0);
+    const px = ctx.getImageData(0, 0, cv.width, cv.height);
+    const gray = new Uint8Array(cv.width * cv.height);
+    for (let i = 0; i < gray.length; i++) gray[i] = px.data[4 * i];
+    px.data.set(colorize(gray));
+    ctx.putImageData(px, 0, 0);
+  };
+  im.src = cv.dataset.gray;
+}
+
+const SWEEP_BOX = { x0: 0, y0: 0, w: 350, h: 330 };
+for (const card of document.querySelectorAll('[data-sweep]')) {
+  const key = card.dataset.sweep;
+  let seed = Number(card.dataset.seed);
+  const btn = card.querySelector('button');
+  btn.addEventListener('click', async () => {
+    seed += 1;
+    btn.disabled = true;
+    const t0 = performance.now();
+    try {
+      const raw = await sweepAsync({ ...SWEEP_PRESETS[key].params, seed }, (f) => {
+        btn.textContent = `Computing ${Math.round(f * 100)} %`;
+      });
+      const { paths, stats } = composeSweep(raw);
+      const seconds = (performance.now() - t0) / 1000;
+      const img = inkRaster(paths, { box: SWEEP_BOX, ppm: 3, pen: 0.35 });
+      card.querySelector('[data-role="img"]').getContext('2d').putImageData(new ImageData(img.rgba, img.W, img.H), 0, 0);
+      card.querySelector('[data-role="label"]').textContent = `seed ${seed}`;
+      card.querySelector('[data-role="stats"]').innerHTML = sweepStatsHTML(stats, seconds, 'in this browser');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'New variation';
+    }
+  });
+}
 
 for (const card of document.querySelectorAll('[data-gen]')) {
   const key = card.dataset.gen;

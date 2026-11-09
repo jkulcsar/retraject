@@ -107,15 +107,22 @@ to its paper pointer.
 The concept's riskiest parts, tested before anything is built around
 them.
 
-**1A, cap test** (start first; it runs by itself for three days):
-1. Buy 2–3 candidate pens: Staedtler pigment liner 308, Staedtler triplus
-   334, a Sakura Micron.
+**1A, pen test** (start first; the cap part runs by itself for three days):
+1. Buy 2–3 candidate fineliners (Staedtler pigment liner 308, Staedtler
+   triplus 334, a Sakura Micron) and a pressurised ballpoint, the Uni
+   PowerTank that Stoli draws with. A pressurised ballpoint writes on a
+   vertical sheet and does not dry out uncapped, so it may need no cap.
 2. Print simple caps with a silicone or closed-cell foam insert
    (Claude provides the OpenSCAD model).
-3. Cap them pointing sideways, as on the wall, for 72 hours; then draw.
+3. Cap the fineliners pointing sideways, as on the wall, for 72 hours;
+   leave the ballpoint uncapped; then draw.
+4. Stack test, by hand with a ruler on the candidate paper: patches of
+   1, 2, 4, 8 and 16 coverings of parallel lines about 1 mm apart. Note
+   where each pen soaks, pills or tears the paper. This sets the ink cap
+   per pen and paper, which decides how dark the sweeps (§5) may get.
 
 **Gate:** at least one pen starts a clean line on the first stroke after
-72 hours.
+72 hours, and the stack test gives an ink cap for that pen.
 
 **1B, paper rig** (on the bench, no plotter needed):
 1. Buy a catch-free spring roller (an insect-screen spring roller, or a
@@ -388,15 +395,18 @@ planner → player.
 - **Budget check:** pen-down length, pen-up travel and the number of pen
   lifts give an estimated drawing time (pen down 50 mm/s, pen up
   200 mm/s, 0.24 s per lift). A picture is thinned or regenerated if:
-  - its drawing time exceeds about 40 minutes;
+  - its drawing time exceeds its family's budget (about 40 minutes for
+    the fineliner families; sweeps are planned as drawings of an hour or
+    more);
   - it leaves large areas empty;
   - it piles up ink in one spot.
 
-  An ink limiter keeps every 5 mm square under about 45 mm of line,
-  breaking a line where it would overfill a square. The prototype showed
-  it is needed: Bohmian trajectories crowd at the slits, and a
-  harmonograph's fading centre gets heavy. Good pictures took 5–25
-  minutes.
+  An ink limiter keeps every 5 mm square under a cap, breaking a line
+  where it would overfill a square: about 45 mm of line for a fineliner,
+  and for the ballpoint whatever the 1A stack test allows (the sweeps
+  prototype uses 300 mm as a placeholder). The prototype showed it is
+  needed: Bohmian trajectories crowd at the slits, and a harmonograph's
+  fading centre gets heavy. Good fineliner pictures took 5–25 minutes.
 - **Planner and player** are unchanged; the engine only produces paths.
 
 **Families**, all drawn as lines: streamlines, contour lines, nodal lines
@@ -410,7 +420,21 @@ and trajectories, which is what a pen draws best.
 | Bohmian double slit | trajectories dq/dt = Im(∂ψ/∂q ÷ ψ) of two free Gaussian packets (exact solution) | slit separation, or packet width |
 | Harmonograph | damped sums of sines: one continuous line | frequency ratio and detuning |
 | Curl-noise flow | evenly spaced streamlines (Jobard–Lefer) of a divergence-free noise field | noise seed or scale |
+| Sweeps | arcs of fluid carried by RK4 through a vortex with kinematic-simulation turbulence (Kolmogorov spectrum), optionally a breathing ring of satellite vortices; each arc drawn every few steps | the seed, or the turbulence strength |
 | Retraject's own | taught tool paths, fields of manipulability ellipses | one taught program, step by step |
+
+**Sweeps, after Stoli.** Stoli's drawings get their depth from stacking,
+not from a richer formula: one line drawn hundreds of times, each copy
+moved a little by a slowly changing flow. The stack reads as a
+translucent veil, darker where copies bunch up, with a dark crease and a
+crosshatch where the veil folds. Three things follow for the build:
+- **The pen.** It takes a pressurised ballpoint, as Stoli uses; a
+  fineliner would soak the paper. The 1A pen test now covers it.
+- **The budget.** A sweep draws 80–210 m of line, about 30–80 minutes;
+  richer ones run for hours. The frame computes the next picture while
+  the current one hangs.
+- **Compute.** The prototype computes a sweep in 1–11 s on a Mac, so
+  minutes on a Pi 1. Computing longer buys more sheets and finer flow.
 
 **Series and the roll.**
 - A curator picks a family and a parameter sweep for each roll, so the
@@ -457,7 +481,7 @@ waves.
 | Phase | Item | Approx. |
 |---|---|---|
 | 0 | bench kit, both phases (`HARDWARE.md` §8.1) | CHF 107.50 |
-| 1A | 2–3 candidate pens, silicone or foam for caps | CHF 15 |
+| 1A | 2–3 candidate fineliners, a Uni PowerTank pressurised ballpoint, silicone or foam for caps | CHF 25 |
 | 1B | catch-free spring roller (or a blind to strip) | CHF 30–40 |
 | 1B | 42 cm paper roll (e.g. HP Q1446A, 90 g, 45.7 m) | to price |
 | 1B | TCRT5000 module, NEMA17 worm-gear motor | to price |
@@ -478,7 +502,8 @@ waves.
 
 | Risk | Retired by |
 |---|---|
-| Pens dry out between drawings | 1A cap test |
+| Pens dry out between drawings | 1A pen test (caps; or a pressurised ballpoint) |
+| Stacked lines soak or pill the paper | 1A stack test, which sets the ink cap |
 | Paper roll drifts or curls | 1B paper rig |
 | Too loud for a living room | 1C noise baseline, checked again at the Phase 5 gate |
 | Gravity: carriage creeps, pen pressure changes | Phase 3 gate |

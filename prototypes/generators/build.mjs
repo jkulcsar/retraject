@@ -2,11 +2,18 @@
 // the generator code inlined so the page can compute new variations itself.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { make, toSVG } from './gen.js';
-import { statsHTML } from './present.js';
+import { statsHTML, sweepStatsHTML } from './present.js';
+import { sweep, sheetSteps, composeSweep, SWEEP_PRESETS, SWEEP_DEFAULTS } from './sweep.js';
+import { inkRaster } from './ink.js';
+import { pngGray } from './render.mjs';
 
 const here = new URL('.', import.meta.url).pathname;
 const genSrc = readFileSync(here + 'gen.js', 'utf8');
 const presentSrc = readFileSync(here + 'present.js', 'utf8');
+// sweep.js imports from gen.js; inlined into the same module, those names already exist
+const sweepSrc = readFileSync(here + 'sweep.js', 'utf8').replace(/^import .*$/m, '');
+const inkSrc = readFileSync(here + 'ink.js', 'utf8');
+const grayURI = (img) => 'data:image/png;base64,' + pngGray(img.W, img.H, img.gray).toString('base64');
 
 const CARDS = [
   { key: 'chladni', tag: 'Waves · vibrating plate', title: 'Chladni figure',
@@ -57,10 +64,50 @@ series.forEach((g, i) => {
         <span class="cap"><b>${String(i + 1).padStart(2, '0')}</b> Γ = ${g.toFixed(1)} × 4πUa</span></li>`;
 });
 
+// ---------- sweeps ----------
+const SWEEP_BOX = { x0: 0, y0: 0, w: 350, h: 330 };
+let sweepHTML = '';
+for (const [key, pr] of Object.entries(SWEEP_PRESETS)) {
+  const t0 = Date.now();
+  const { paths, stats } = composeSweep(sweep(pr.params));
+  const seconds = (Date.now() - t0) / 1000;
+  const img = inkRaster(paths, { box: SWEEP_BOX, ppm: 3, pen: 0.35 });
+  const seed = pr.params.seed ?? SWEEP_DEFAULTS.seed;
+  console.log(`sweep ${key}: ${seconds.toFixed(1)} s, ${stats.penDownM.toFixed(0)} m`);
+  sweepHTML += `
+      <article class="card" data-sweep="${key}" data-seed="${seed}">
+        <header><span class="tag">${esc(pr.note)}</span><h3>${pr.title}</h3></header>
+        <div class="art"><div class="matb"><div class="sheet"><canvas data-role="img" data-gray="${grayURI(img)}" width="${img.W}" height="${img.H}" role="img" aria-label="${pr.title}: stacked pen lines forming translucent veils around a central hole, previewed as ballpoint ink"></canvas></div></div></div>
+        <div class="row">
+          <p class="params" data-role="label">seed ${seed}</p>
+          <button type="button">New variation</button>
+        </div>
+        <dl class="facts" data-role="stats">${sweepStatsHTML(stats, seconds, 'on the build machine')}</dl>
+      </article>`;
+}
+
+// One sheet, built up snapshot by snapshot
+const COUNTS = [1, 4, 15, 55];
+const steps = sheetSteps(SWEEP_PRESETS.veils.params, 3, COUNTS);
+let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+for (const q of steps[steps.length - 1]) for (const [x, y] of q) { bx0 = Math.min(bx0, x); by0 = Math.min(by0, y); bx1 = Math.max(bx1, x); by1 = Math.max(by1, y); }
+const side = Math.max(bx1 - bx0, by1 - by0) + 16;
+const stepBox = { x0: (bx0 + bx1 - side) / 2, y0: (by0 + by1 - side) / 2, w: side, h: side };
+let stepsHTML = '';
+steps.forEach((paths, i) => {
+  const img = inkRaster(paths, { box: stepBox, ppm: Math.min(6, 520 / side), pen: 0.35 });
+  const n = COUNTS[i];
+  stepsHTML += `
+        <li><div class="art small"><div class="matb"><div class="sheet"><canvas data-gray="${grayURI(img)}" width="${img.W}" height="${img.H}" role="img" aria-label="One sheet after ${n} snapshot${n > 1 ? 's' : ''}"></canvas></div></div></div>
+        <span class="cap"><b>${String(n).padStart(2, '0')}</b> snapshot${n > 1 ? 's' : ''}</span></li>`;
+});
+
 const tpl = readFileSync(here + 'page.html', 'utf8');
 const out = tpl
   .replace('<!--CARDS-->', cardsHTML)
   .replace('<!--SERIES-->', seriesHTML)
-  .replace('/*GENJS*/', () => genSrc + '\n' + presentSrc);
+  .replace('<!--SWEEPS-->', sweepHTML)
+  .replace('<!--STEPS-->', stepsHTML)
+  .replace('/*GENJS*/', () => genSrc + '\n' + presentSrc + '\n' + sweepSrc + '\n' + inkSrc);
 writeFileSync(here + 'living-picture-generators.html', out);
 console.log('written', (out.length / 1024).toFixed(0), 'KB');

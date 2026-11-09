@@ -10,3 +10,16 @@ export function statsHTML(s) {
     `<div><dt>Densest spot</dt><dd>${Math.round(s.densestMm)} mm of line in a 5 mm square</dd></div>`
   );
 }
+
+// Sweeps run for hours with a ballpoint, so they get their own facts.
+export function sweepStatsHTML(s, seconds, where) {
+  const h = Math.floor(s.minutes / 60), m = Math.round(s.minutes % 60);
+  const time = h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`;
+  return (
+    `<div><dt>Drawing time</dt><dd>about ${time}</dd></div>` +
+    `<div><dt>Pen down</dt><dd>${Math.round(s.penDownM)} m of line</dd></div>` +
+    `<div><dt>Pen up</dt><dd>${s.penUpM.toFixed(1)} m travel · ${s.lifts} lifts</dd></div>` +
+    `<div><dt>Densest spot</dt><dd>${Math.round(s.densestMm)} mm of line in a 5 mm square</dd></div>` +
+    `<div><dt>Computed</dt><dd>in ${seconds.toFixed(1)} s ${where}</dd></div>`
+  );
+}
