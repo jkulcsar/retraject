@@ -1,0 +1,34 @@
+#!/bin/bash
+# WiFi watchdog: if no WiFi interface has reached the router for three
+# checks in a row (about 90 s), re-initialise every USB WiFi adapter, as if
+# it were unplugged and plugged back in. The rtl8192cu driver (Edimax
+# EW-7811Un) can go deaf after a dropout, and NetworkManager alone does not
+# recover it. Runs every 30 s from wifi-watchdog.timer; logs with tag
+# wifi-watchdog (journalctl -t wifi-watchdog).
+set -u
+GW=$(ip -4 route show default | awk '{print $3; exit}')
+GW=${GW:-192.168.10.1}
+STATE=/run/wifi-watchdog.fails
+ADAPTERS="7392:7811 148f:5370"   # Edimax EW-7811Un, element14 WiPi
+
+for i in $(ls /sys/class/net | grep '^wlan'); do
+  if ping -I "$i" -c 2 -W 2 -q "$GW" >/dev/null 2>&1; then
+    fails=$(cat $STATE 2>/dev/null || echo 0)
+    [ "$fails" -gt 0 ] && logger -t wifi-watchdog "router answers on $i again after $fails failed checks"
+    echo 0 > $STATE
+    exit 0
+  fi
+done
+
+fails=$(( $(cat $STATE 2>/dev/null || echo 0) + 1 ))
+echo $fails > $STATE
+logger -t wifi-watchdog "no WiFi interface reaches $GW ($fails)"
+[ $((fails % 3)) -eq 0 ] || exit 0
+
+for d in /sys/bus/usb/devices/*; do
+  [ -f "$d/idVendor" ] && [ "$(cat $d/authorized)" = 1 ] || continue   # skip adapters switched off on purpose
+  id="$(cat $d/idVendor):$(cat $d/idProduct)"
+  case " $ADAPTERS " in *" $id "*) ;; *) continue ;; esac
+  logger -t wifi-watchdog "re-initialising adapter $(basename $d) ($id)"
+  echo 0 > "$d/authorized"; sleep 2; echo 1 > "$d/authorized"
+done

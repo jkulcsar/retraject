@@ -1,0 +1,26 @@
+25 rounds, 2026-11-09T20:35:50 → 2026-11-09T22:38:45
+
+== arm32v6-01 (Edimax-2): 13 rounds, 0 failed
+   Pi→router ping: median 2.1 ms, worst 183 ms, over 500 ms 0, over 100 ms 523, of 3900 (0 lost)
+   Mac→Pi ping:    median 5.4 ms, worst 205 ms, over 500 ms 0
+   bridge sim, drawing speed: 0 underruns in 0/13 runs, longest gap 0 ms
+   bridge sim, double speed: 14 underruns in 7/13 runs, longest gap 35 ms
+   bulk Mac→Pi 18.6–19.7, median 19.4 Mbit/s; Pi→Mac 21.0–22.4, median 21.7
+   cold starts: 4/4 back within 4 min (10.0–32.3, median 18.9 s)
+   watchdog restarts: 0
+   signal -40 to -25 dBm; Pi 38.5–39.0 °C; power flags ['0x0']; 'AP lost' events 0
+
+== arm32v6-02 (Edimax-1): 12 rounds, 0 failed
+   Pi→router ping: median 2.1 ms, worst 183 ms, over 500 ms 0, over 100 ms 471, of 3600 (0 lost)
+   Mac→Pi ping:    median 5.5 ms, worst 217 ms, over 500 ms 0
+   bridge sim, drawing speed: 0 underruns in 0/12 runs, longest gap 0 ms
+   bridge sim, double speed: 9 underruns in 7/12 runs, longest gap 32 ms
+   bulk Mac→Pi 18.8–20.4, median 20.0 Mbit/s; Pi→Mac 21.4–23.0, median 22.2
+   cold starts: 4/4 back within 4 min (10.5–11.6, median 10.6 s)
+   watchdog restarts: 0
+   signal -36 to -32 dBm; Pi 40.6–41.7 °C; power flags ['0x0']; 'AP lost' events 0
+
+Continuous pings from the Mac, once a second:
+   arm32v6-01: 7600 replies, 42 lost, longest gap 12 s, 5 over 500 ms
+   arm32v6-02: 7597 replies, 45 lost, longest gap 13 s, 3 over 500 ms
+   router: 7642 replies, 0 lost, longest gap 0 s, 0 over 500 ms
